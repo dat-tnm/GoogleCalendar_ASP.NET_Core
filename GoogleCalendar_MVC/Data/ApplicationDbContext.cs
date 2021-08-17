@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using GoogleCalendar_MVC.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,7 @@ namespace GoogleCalendar_MVC.Data
             : base(options)
         {
         }
+
+        public DbSet<Credential> Credentials { get; set; }
     }
 }
