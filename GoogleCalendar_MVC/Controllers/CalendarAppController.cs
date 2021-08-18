@@ -84,6 +84,11 @@ namespace GoogleCalendar_MVC.Controllers
             return View(events);
         }
 
+        public IActionResult Create()
+        {
+            return View();
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Create([Bind("Summary,Start,End,EndTimeUnspecified,Description")]EventVM viewModel)
@@ -116,5 +121,40 @@ namespace GoogleCalendar_MVC.Controllers
             return RedirectToAction("Index");
         }
 
+        public async Task<IActionResult> Edit(string id)
+        {
+            var service = GetConfigCalendarService();
+            var request = service.Events.Get("primary", id);
+            Event result = await request.ExecuteAsync();
+            var viewModel = new EventVM()
+            {
+                Summary = result.Summary,
+                Start = result.Start.DateTime == null ? DateTime.Now : (DateTime)result.Start.DateTime,
+                End = result.End.DateTime == null ? DateTime.Now : (DateTime)result.End.DateTime,
+                EndTimeUnspecified = result.EndTimeUnspecified == null ? false : (bool)result.EndTimeUnspecified,
+                Description = result.Description
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(string id, [Bind("Summary,Start,End,EndTimeUnspecified,Description")] EventVM viewModel)
+        {
+            var service = GetConfigCalendarService();
+            var get_request = service.Events.Get("primary", id);
+            Event result = await get_request.ExecuteAsync();
+
+            result.Summary = viewModel.Summary;
+            result.Start.DateTime = viewModel.Start;
+            result.End.DateTime = viewModel.End;
+            result.EndTimeUnspecified = viewModel.EndTimeUnspecified;
+            result.Description = viewModel.Description;
+
+            var post_request = service.Events.Update(result, "primary", result.Id);
+            var post_result = await post_request.ExecuteAsync();
+
+            return RedirectToAction("Index");
+        }
     }
 }
