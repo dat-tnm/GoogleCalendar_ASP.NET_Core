@@ -177,6 +177,30 @@ namespace GoogleCalendar_MVC.Controllers
 
             return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
         }
-    
+
+
+        [HttpDelete]
+        public async Task<IActionResult> Delete(string id)
+        {
+            bool success = false;
+            var service = GetConfigCalendarService();
+            var request = service.Events.Get("primary", id);
+            try
+            {
+                Event result = await request.ExecuteAsync();
+                var delete_request = service.Events.Delete("primary", result.Id);
+                await delete_request.ExecuteAsync();
+                success = true;
+            }
+            catch (Exception)
+            {
+            }
+
+            if (success)
+            {
+                return Json(new { success = true, message = "Delete Successful" });
+            }
+            return Json(new { success = false, message = "Delete Not Successful" });
+        }
     }
 }
