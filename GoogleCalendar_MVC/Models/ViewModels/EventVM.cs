@@ -35,7 +35,6 @@ namespace GoogleCalendar_MVC.Models.ViewModels
         public string RecurringEventId { get; set; }
         public IList<Attendee> Attendees { get; set; }
         public ExtendedProperties ExtendedProperties { get; set; }
-        public Gadget Gadget { get; set; }
         public Reminders Reminders { get; set; }
         public IList<Attachment> Attachments { get; set; }
     }
