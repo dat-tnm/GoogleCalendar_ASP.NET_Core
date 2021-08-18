@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -72,7 +73,7 @@ namespace GoogleCalendar_MVC.Controllers
             {
                 int input_m_val = int.Parse(month);
                 int input_y_val = int.Parse(year);
-                if (input_m_val < 1 || input_m_val > 12 || input_y_val < 2000)
+                if (input_m_val < 1 || input_m_val > 12 || input_y_val < 1)
                 {
                     throw new Exception();
                 }
@@ -112,8 +113,49 @@ namespace GoogleCalendar_MVC.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Create([Bind("Summary,Start,End,EndTimeUnspecified,Description")]EventVM viewModel)
+        public async Task<IActionResult> Create([Bind("Summary,Start,End,Description")]EventVM viewModel)
         {
+            var listAttendees = new List<EventAttendee>();
+            viewModel.Attendees = new List<Attendee>();
+            bool hasError = false;
+            if (HttpContext.Request.Form.ContainsKey("Emails"))
+            {
+                var emailCheck = new EmailAddressAttribute();
+                string input_email;
+                EventAttendee attendee;
+                for (int i = 0; i < HttpContext.Request.Form["Emails"].Count; i++)
+                {
+                    input_email = HttpContext.Request.Form["Emails"][i];
+                    if (emailCheck.IsValid(input_email))
+                    {
+                        attendee = new EventAttendee() { Email = input_email };
+                        try
+                        {
+                            attendee.Optional = bool.Parse(HttpContext.Request.Form["Optionals"][i]);
+                            attendee.Resource = bool.Parse(HttpContext.Request.Form["Resources"][i]);
+                        }
+                        catch (Exception) { }
+                        listAttendees.Add(attendee);
+                        viewModel.Attendees.Add(new Attendee()
+                        {
+                            Email = input_email,
+                            Optional = attendee.Optional == true ? true : false,
+                            Resource = attendee.Resource == true ? true : false
+                        });
+                    }
+                    else
+                    {
+                        viewModel.Attendees.Add(new Attendee() { Email = input_email, Error = "Email is not valid" });
+                        hasError = true;
+                    }
+                }
+            }
+            if (hasError)
+            {
+                return View(viewModel);
+            }
+            
+
             Event body = new Event()
             {
                 Summary = viewModel.Summary,
@@ -127,10 +169,14 @@ namespace GoogleCalendar_MVC.Controllers
                     DateTime = viewModel.End,
                     TimeZone = "Asia/Ho_Chi_Minh"
                 },
-                EndTimeUnspecified = viewModel.EndTimeUnspecified,
                 Description = viewModel.Description,
 
             };
+            if (listAttendees.Count > 0)
+            {
+                body.Attendees = listAttendees;
+            }
+
             var service = GetConfigCalendarService();
             var request = service.Events.Insert(body, "primary");
             Event result = await request.ExecuteAsync();
@@ -152,24 +198,83 @@ namespace GoogleCalendar_MVC.Controllers
                 Summary = result.Summary,
                 Start = result.Start.DateTime == null ? DateTime.Now : (DateTime)result.Start.DateTime,
                 End = result.End.DateTime == null ? DateTime.Now : (DateTime)result.End.DateTime,
-                EndTimeUnspecified = result.EndTimeUnspecified == null ? false : (bool)result.EndTimeUnspecified,
-                Description = result.Description
+                Description = result.Description,
+                Attendees = new List<Attendee>()
             };
+            foreach (var item in result.Attendees)
+            {
+                viewModel.Attendees.Add(new Attendee()
+                {
+                    Email = item.Email,
+                    Optional = item.Optional == true ? true : false
+                });
+            }
 
             return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(string id, [Bind("Summary,Start,End,EndTimeUnspecified,Description")] EventVM viewModel)
+        public async Task<IActionResult> Edit(string id, [Bind("Summary,Start,End,Description")] EventVM viewModel)
         {
             var service = GetConfigCalendarService();
             var get_request = service.Events.Get("primary", id);
-            Event result = await get_request.ExecuteAsync();
+            Event result;
+            try
+            {
+                result = await get_request.ExecuteAsync();
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
+
+            var listAttendees = new List<EventAttendee>();
+            viewModel.Attendees = new List<Attendee>();
+            bool hasError = false;
+            if (HttpContext.Request.Form.ContainsKey("Emails"))
+            {
+                var emailCheck = new EmailAddressAttribute();
+                string input_email;
+                EventAttendee attendee;
+                for (int i = 0; i < HttpContext.Request.Form["Emails"].Count; i++)
+                {
+                    input_email = HttpContext.Request.Form["Emails"][i];
+                    if (emailCheck.IsValid(input_email))
+                    {
+                        attendee = new EventAttendee() { Email = input_email };
+                        try
+                        {
+                            attendee.Optional = bool.Parse(HttpContext.Request.Form["Optionals"][i]);
+                            attendee.Resource = bool.Parse(HttpContext.Request.Form["Resources"][i]);
+                        }
+                        catch (Exception) { }
+                        listAttendees.Add(attendee);
+                        viewModel.Attendees.Add(new Attendee()
+                        {
+                            Email = input_email,
+                            Optional = attendee.Optional == true ? true : false,
+                            Resource = attendee.Resource == true ? true : false
+                        });
+                    }
+                    else
+                    {
+                        viewModel.Attendees.Add(new Attendee() { Email = input_email, Error = "Email is not valid" });
+                        hasError = true;
+                    }
+                }
+            }
+            if (hasError)
+            {
+                return View(viewModel);
+            }
+            if (listAttendees.Count > 0)
+            {
+                result.Attendees = listAttendees;
+            }
 
             result.Summary = viewModel.Summary;
             result.Start.DateTime = viewModel.Start;
             result.End.DateTime = viewModel.End;
-            result.EndTimeUnspecified = viewModel.EndTimeUnspecified;
             result.Description = viewModel.Description;
 
             var post_request = service.Events.Update(result, "primary", result.Id);
@@ -201,6 +306,12 @@ namespace GoogleCalendar_MVC.Controllers
                 return Json(new { success = true, message = "Delete Successful" });
             }
             return Json(new { success = false, message = "Delete Not Successful" });
+        }
+
+
+        public IActionResult GetAttendeesForm()
+        {
+            return PartialView("_AttendeesPartial");
         }
     }
 }
