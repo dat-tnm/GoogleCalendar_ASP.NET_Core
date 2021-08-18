@@ -1,0 +1,45 @@
+﻿@model Google.Apis.Calendar.v3.Data.Events
+@{
+    ViewBag.Title = "Calendar app";
+}
+
+
+<div class="row">
+    <div class="col-6">
+        <h2>Upcoming Event</h2>
+    </div>
+    <div class="col-6 text-right">
+        <a class="btn btn-success" asp-action="Create" asp-controller="CalendarApp"><i class="fas fa-plus"></i>&nbsp; Create new event</a>
+    </div>
+</div>
+
+<div>
+@if (Model.Items.Count > 0)
+{
+	<table class="table table-stripe table-border">
+        <tr>
+            <th>Id</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Summary</th>
+            <th>Description</th>
+            <th>ColorId</th>
+        </tr>
+        @foreach (var item in Model.Items)
+        {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.Start</td>
+            <td>@item.End</td>
+            <td>@item.Summary</td>
+            <td>@item.Description</td>
+            <td>@item.ColorId</td>
+        </tr>
+        }
+    </table>
+}
+else
+{
+    <p>Don't have any event yet.</p>
+}
+</div>
