@@ -19,7 +19,6 @@ namespace GoogleCalendar_MVC.Models.ViewModels
         public DateTime Start { get; set; }
         [Required]
         public DateTime End { get; set; }
-        public bool EndTimeUnspecified { get; set; }
         public string Transparency { get; set; }
         public string Visibility { get; set; }
         public int Sequence { get; set; }
