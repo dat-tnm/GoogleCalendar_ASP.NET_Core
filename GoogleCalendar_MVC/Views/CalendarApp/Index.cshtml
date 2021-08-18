@@ -1,4 +1,4 @@
-﻿@model Google.Apis.Calendar.v3.Data.Events
+﻿@model GoogleCalendar_MVC.Models.ViewModels.CalendarIndexVM
 @{
     ViewBag.Title = "Calendar app";
 }
@@ -7,6 +7,11 @@
 <div class="row">
     <div class="col-6">
         <h2>Upcoming Event</h2>
+        <div>
+            <a class="btn btn-info" href="@(ViewContext.HttpContext.Request.Path + $"?month={Model.SelectedMonthYear.AddMonths(-1).Month}&year={Model.SelectedMonthYear.AddMonths(-1).Year}")"><</a>
+            Calendar: @Model.SelectedMonthYear.Month/@Model.SelectedMonthYear.Year
+            <a class="btn btn-info" href="@(ViewContext.HttpContext.Request.Path + $"?month={Model.SelectedMonthYear.AddMonths(1).Month}&year={Model.SelectedMonthYear.AddMonths(1).Year}")">></a>
+        </div>
     </div>
     <div class="col-6 text-right">
         <a class="btn btn-success" asp-action="Create" asp-controller="CalendarApp"><i class="fas fa-plus"></i>&nbsp; Create new event</a>
@@ -14,7 +19,7 @@
 </div>
 
 <div>
-@if (Model.Items.Count > 0)
+@if (Model.Events.Count > 0)
 {
 	<table class="table table-stripe table-border">
         <tr>
@@ -23,17 +28,21 @@
             <th>End</th>
             <th>Summary</th>
             <th>Description</th>
-            <th>ColorId</th>
+            <th>Actions</th>
         </tr>
-        @foreach (var item in Model.Items)
+        @foreach (var item in Model.Events)
         {
         <tr>
             <td>@item.Id</td>
-            <td>@item.Start</td>
-            <td>@item.End</td>
+            <td>@item.Start.DateTime</td>
+            <td>@item.End.DateTime</td>
             <td>@item.Summary</td>
             <td>@item.Description</td>
-            <td>@item.ColorId</td>
+            <td class="btn-group">
+                <a class="btn btn-info"><i class="fas fa-clipboard"></i></a>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                <button class="btn btn-danger" onclick="Delete('@Url.Action("Delete", new {id = item.Id})')" ><i class="fas fa-trash-alt"></i></button>
+            </td>
         </tr>
         }
     </table>
