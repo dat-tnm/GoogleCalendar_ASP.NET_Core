@@ -64,24 +64,45 @@ namespace GoogleCalendar_MVC.Controllers
 
 
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index([FromQuery]string month, [FromQuery]string year)
         {
+
+            int month_val, year_val;
+            try
+            {
+                int input_m_val = int.Parse(month);
+                int input_y_val = int.Parse(year);
+                if (input_m_val < 1 || input_m_val > 12 || input_y_val < 2000)
+                {
+                    throw new Exception();
+                }
+                month_val = input_m_val;
+                year_val = input_y_val;
+            }
+            catch (Exception)
+            {
+                month_val = DateTime.Now.Month;
+                year_val = DateTime.Now.Year;
+            }
             var service = GetConfigCalendarService();
 
             // Define parameters of request.
             EventsResource.ListRequest request = service.Events.List("primary");
-            var mindate = DateTime.Now;
-            mindate.AddMonths(1 - DateTime.Now.Month);
-            mindate.AddDays(1 - DateTime.Now.Day);
-            request.TimeMin = mindate;
+            request.TimeMin = Convert.ToDateTime($"01/{month_val}/{year_val} 00:00:00 AM");
+            request.TimeMax = ((DateTime)request.TimeMin).AddMonths(1);
             request.ShowDeleted = false;
             request.SingleEvents = true;
             request.MaxResults = 10;
             request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
 
-            Events events = request.Execute();
+            Events events = await request.ExecuteAsync();
+            var viewModel = new CalendarIndexVM()
+            {
+                Events = events.Items,
+                SelectedMonthYear = (DateTime)request.TimeMin
+            };
 
-            return View(events);
+            return View(viewModel);
         }
 
         public IActionResult Create()
@@ -118,7 +139,7 @@ namespace GoogleCalendar_MVC.Controllers
                 return View(viewModel);
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
         }
 
         public async Task<IActionResult> Edit(string id)
@@ -154,7 +175,8 @@ namespace GoogleCalendar_MVC.Controllers
             var post_request = service.Events.Update(result, "primary", result.Id);
             var post_result = await post_request.ExecuteAsync();
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
         }
+    
     }
 }
