@@ -42,7 +42,7 @@
                 <label asp-for="EndTimeUnspecified"></label>
             </div>
             <div class="col-md-5">
-                <input asp-for="EndTimeUnspecified" class="form-control" />
+                <input asp-for="EndTimeUnspecified" type="checkbox" class="form-control" />
             </div>
             <span asp-validation-for="EndTimeUnspecified" class="text-danger"></span>
         </div>
@@ -59,7 +59,7 @@
             <div class="col-5 offset-2">
                 <div class="btn-group">
                     <input type="submit" value="Save and create" class="btn btn-success" />
-                    <input type="submit" value="Cancel" class="btn btn-danger" />
+                    <a asp-action="Index" class="btn btn-danger">Cancel</a>
                 </div>
             </div>
         </div>
