@@ -7,6 +7,7 @@ using GoogleCalendar_MVC.Configs;
 using GoogleCalendar_MVC.Data;
 using GoogleCalendar_MVC.Models;
 using GoogleCalendar_MVC.Models.ViewModels;
+using GoogleCalendar_MVC.Repository.IRepository;
 using GoogleCalendar_MVC.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -26,51 +27,17 @@ namespace GoogleCalendar_MVC.Controllers
     [Authorize]
     public class CalendarAppController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IEventRepository _eventRepo;
 
-
-        public CalendarAppController(ApplicationDbContext db)
+        public CalendarAppController(IEventRepository eventRepository)
         {
-            _db = db;
+            _eventRepo = eventRepository;
         }
-
-        private CalendarService GetConfigCalendarService()
-        {
-            var claimsIdentity = (ClaimsIdentity)this.User.Identity;
-            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            string userid = claim.Value;
-
-            UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                            new ClientSecrets()
-                            {
-                                ClientId = StaticDetails.GoogleCalendar_clientId,
-                                ClientSecret = StaticDetails.GoogleCalendar_clientSecret,
-                            },
-                            StaticDetails.GoogleCalendar_Scopes,
-                            userid,
-                            CancellationToken.None,
-                            new MyDataStore(_db)).Result;
-
-            // Create Google Calendar API service.
-            return new CalendarService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = StaticDetails.GoogleCalendar_AppName,
-            });
-
-        }
-
-        
-
-        
-
-
 
 
 
         public async Task<IActionResult> Index([FromQuery]string month, [FromQuery]string year)
         {
-
             int month_val, year_val;
             try
             {
@@ -88,22 +55,22 @@ namespace GoogleCalendar_MVC.Controllers
                 month_val = DateTime.Now.Month;
                 year_val = DateTime.Now.Year;
             }
-            var service = GetConfigCalendarService();
 
-            // Define parameters of request.
-            EventsResource.ListRequest request = service.Events.List("primary");
-            request.TimeMin = Convert.ToDateTime($"01/01/0001 00:00:00 AM").AddMonths(month_val - 1).AddYears(year_val - 1);
-            request.TimeMax = ((DateTime)request.TimeMin).AddMonths(1);
-            request.ShowDeleted = false;
-            request.SingleEvents = true;
-            request.MaxResults = 10;
-            request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
+            DateTime timeMin = Convert.ToDateTime($"01/01/0001 00:00:00 AM").AddMonths(month_val - 1).AddYears(year_val - 1);
+            var events = await _eventRepo.GetList(request =>
+            {
+                request.TimeMin = timeMin;
+                request.TimeMax = ((DateTime)request.TimeMin).AddMonths(1);
+                request.ShowDeleted = false;
+                request.SingleEvents = true;
+                request.MaxResults = 10;
+                request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
+            });
 
-            Events events = await request.ExecuteAsync();
             var viewModel = new CalendarIndexVM()
             {
                 Events = events.Items,
-                SelectedMonthYear = (DateTime)request.TimeMin
+                SelectedMonthYear = timeMin
             };
 
             return View(viewModel);
@@ -205,27 +172,22 @@ namespace GoogleCalendar_MVC.Controllers
             }
 
 
-            Event body = new Event();
-            new EventModelMapper(body, viewModel).MappingToModel();
+            Event eventToCreate = new Event();
+            new EventModelMapper(eventToCreate, viewModel).MappingToModel();
 
             if (listAttendees.Count > 0)
             {
-                body.Attendees = listAttendees;
+                eventToCreate.Attendees = listAttendees;
             }
             if (listReminder.Count > 0)
             {
-                body.Reminders = new Event.RemindersData();
-                body.Reminders.UseDefault = false;
-                body.Reminders.Overrides = listReminder;
+                eventToCreate.Reminders = new Event.RemindersData();
+                eventToCreate.Reminders.UseDefault = false;
+                eventToCreate.Reminders.Overrides = listReminder;
             }
 
-            var service = GetConfigCalendarService();
-            var request = service.Events.Insert(body, "primary");
-            try
-            {
-                Event result = await request.ExecuteAsync();
-            }
-            catch (Exception)
+            var result = await _eventRepo.Create(eventToCreate);
+            if(result == null)
             {
                 ModelState.AddModelError("error", "Some values are not valid!");
                 return View(viewModel);
@@ -236,17 +198,12 @@ namespace GoogleCalendar_MVC.Controllers
 
         public async Task<IActionResult> Edit(string id)
         {
-            var service = GetConfigCalendarService();
-            var request = service.Events.Get("primary", id);
-            Event result;
-            try
-            {
-                result = await request.ExecuteAsync();
-            }
-            catch (Exception)
+            Event result = await _eventRepo.Get(id);
+            if(result == null)
             {
                 return NotFound();
             }
+
             var viewModel = new EventVM();
             new EventModelMapper(result, viewModel).MappingToViewModel();
             
@@ -256,14 +213,8 @@ namespace GoogleCalendar_MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(string id, EventVM viewModel)
         {
-            var service = GetConfigCalendarService();
-            var get_request = service.Events.Get("primary", id);
-            Event result;
-            try
-            {
-                result = await get_request.ExecuteAsync();
-            }
-            catch (Exception)
+            Event result = await _eventRepo.Get(id);
+            if(result == null)
             {
                 return NotFound();
             }
@@ -356,12 +307,8 @@ namespace GoogleCalendar_MVC.Controllers
             result.Attendees = listAttendees;
             new EventModelMapper(result, viewModel).MappingToModel();
 
-            var post_request = service.Events.Update(result, "primary", result.Id);
-            try
-            {
-                await post_request.ExecuteAsync();
-            }
-            catch (Exception)
+            bool success = await _eventRepo.Update(id, result);
+            if (!success)
             {
                 ModelState.AddModelError("error", "Some values are not valid!");
                 return View(viewModel);
@@ -374,21 +321,7 @@ namespace GoogleCalendar_MVC.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(string id)
         {
-            bool success = false;
-            var service = GetConfigCalendarService();
-            var request = service.Events.Get("primary", id);
-            try
-            {
-                Event result = await request.ExecuteAsync();
-                var delete_request = service.Events.Delete("primary", result.Id);
-                await delete_request.ExecuteAsync();
-                success = true;
-            }
-            catch (Exception)
-            {
-            }
-
-            if (success)
+            if (await _eventRepo.Delete(id))
             {
                 return Json(new { success = true, message = "Delete Successful" });
             }
