@@ -10,10 +10,10 @@ namespace GoogleCalendar_MVC.Repository.IRepository
 {
     public interface IEventRepository
     {
-        Task<Events> GetList(Action<EventsResource.ListRequest> configureRequest);
-        Task<Event> Create(Event objToCreate);
-        Task<Event> Get(string id);
-        Task<bool> Update(string id, Event objToUpdate);
-        Task<bool> Delete(string id);
+        Task<Events> GetListAsync(Action<EventsResource.ListRequest> configureRequest);
+        Task<Event> CreateAsync(Event objToCreate);
+        Task<Event> GetAsync(string id);
+        Task<bool> UpdateAsync(string id, Event objToUpdate);
+        Task<bool> DeleteAsync(string id);
     }
 }

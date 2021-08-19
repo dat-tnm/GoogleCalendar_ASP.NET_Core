@@ -58,7 +58,7 @@ namespace GoogleCalendar_MVC.Repository
             _db = db;
         }
 
-        public async Task<bool> Delete(string id)
+        public async Task<bool> DeleteAsync(string id)
         {
             var service = GetConfigCalendarService();
             try
@@ -74,7 +74,7 @@ namespace GoogleCalendar_MVC.Repository
             return true;
         }
 
-        public async Task<Event> Get(string id)
+        public async Task<Event> GetAsync(string id)
         {
             var service = GetConfigCalendarService();
             var get_request = service.Events.Get("primary", id);
@@ -91,7 +91,7 @@ namespace GoogleCalendar_MVC.Repository
             return result;
         }
 
-        public async Task<Events> GetList(Action<EventsResource.ListRequest> configureRequest)
+        public async Task<Events> GetListAsync(Action<EventsResource.ListRequest> configureRequest)
         {
             var service = GetConfigCalendarService();
 
@@ -103,7 +103,7 @@ namespace GoogleCalendar_MVC.Repository
             return await request.ExecuteAsync();
         }
 
-        public async Task<bool> Update(string id, Event objToUpdate)
+        public async Task<bool> UpdateAsync(string id, Event objToUpdate)
         {
             var service = GetConfigCalendarService();
             var post_request = service.Events.Update(objToUpdate, "primary", id);
@@ -119,7 +119,7 @@ namespace GoogleCalendar_MVC.Repository
             return true;
         }
 
-        public async Task<Event> Create(Event objToCreate)
+        public async Task<Event> CreateAsync(Event objToCreate)
         {
             var service = GetConfigCalendarService();
             var request = service.Events.Insert(objToCreate, "primary");
