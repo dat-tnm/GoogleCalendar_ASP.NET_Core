@@ -10,77 +10,122 @@ namespace GoogleCalendar_MVC.Utilities
 {
     public class EventModelMapper
     {
-        public Event Model { get; set; }
-        public EventVM ViewModel { get; set; }
-
-        public EventModelMapper(Event model, EventVM viewModel)
+        private void MappingEventVM_To_Event(Event model, EventVM viewModel)
         {
-            Model = model;
-            ViewModel = viewModel;
-        }
-
-        public void MappingToModel()
-        {
-            Model.Summary = ViewModel.Summary;
-            Model.Start = new EventDateTime()
+            model.Summary = viewModel.Summary;
+            model.Start = new EventDateTime()
             {
-                DateTime = ViewModel.Start,
+                DateTime = viewModel.Start,
                 TimeZone = "Asia/Ho_Chi_Minh"
             };
-            Model.End = new EventDateTime()
+            model.End = new EventDateTime()
             {
-                DateTime = ViewModel.End,
+                DateTime = viewModel.End,
                 TimeZone = "Asia/Ho_Chi_Minh"
             };
-            Model.Description = ViewModel.Description;
-            Model.AttendeesOmitted = ViewModel.AttendeesOmitted;
-            Model.Transparency = ViewModel.Transparency;
-            Model.Visibility = ViewModel.Visibility;
-            Model.GuestsCanInviteOthers = ViewModel.GuestsCanInviteOthers;
-            Model.GuestsCanModify = ViewModel.GuestsCanModify;
-            Model.GuestsCanSeeOtherGuests = ViewModel.GuestsCanSeeOtherGuests;
-            Model.AnyoneCanAddSelf = ViewModel.AnyoneCanAddSelf;
-            Model.PrivateCopy = ViewModel.PrivateCopy;
-            Model.Locked = ViewModel.Locked;
-            Model.Location = ViewModel.Location;
+            model.Description = viewModel.Description;
+            model.AttendeesOmitted = viewModel.AttendeesOmitted;
+            model.Transparency = viewModel.Transparency;
+            model.Visibility = viewModel.Visibility;
+            model.GuestsCanInviteOthers = viewModel.GuestsCanInviteOthers;
+            model.GuestsCanModify = viewModel.GuestsCanModify;
+            model.GuestsCanSeeOtherGuests = viewModel.GuestsCanSeeOtherGuests;
+            model.AnyoneCanAddSelf = viewModel.AnyoneCanAddSelf;
+            model.PrivateCopy = viewModel.PrivateCopy;
+            model.Locked = viewModel.Locked;
+            model.Location = viewModel.Location;
         }
 
-        public void MappingToViewModel()
+        private void MappingFullCalendarVM_To_Event(Event model, FullCalendarEventVM viewModel)
         {
-            ViewModel.Summary = Model.Summary;
-            ViewModel.Start = Model.Start.DateTime == null ? DateTime.Now : (DateTime)Model.Start.DateTime;
-            ViewModel.End = Model.Start.DateTime == null ? DateTime.Now : (DateTime)Model.Start.DateTime;
-            ViewModel.Description = Model.Description;
-            ViewModel.AttendeesOmitted = Model.AttendeesOmitted == null ? false : (bool)Model.AttendeesOmitted;
-            ViewModel.Transparency = Model.Transparency;
-            ViewModel.Visibility = Model.Visibility;
-            ViewModel.GuestsCanInviteOthers = Model.GuestsCanInviteOthers == null ? true : (bool)Model.GuestsCanInviteOthers;
-            ViewModel.GuestsCanModify = Model.GuestsCanModify == null ? false : (bool)Model.GuestsCanModify;
-            ViewModel.GuestsCanSeeOtherGuests = Model.GuestsCanSeeOtherGuests == null ? true : (bool)Model.GuestsCanSeeOtherGuests;
-            ViewModel.AnyoneCanAddSelf = Model.AnyoneCanAddSelf == null ? false : (bool)Model.AnyoneCanAddSelf;
-            ViewModel.PrivateCopy = Model.PrivateCopy == null ? false : (bool)Model.PrivateCopy;
-            ViewModel.Locked = Model.Locked == null ? false : (bool)Model.Locked;
-            ViewModel.Location = Model.Location;
+            model.Start = new EventDateTime()
+            {
+                DateTime = viewModel.Start,
+                TimeZone = "Asia/Ho_Chi_Minh"
+            };
+            model.End = new EventDateTime()
+            {
+                DateTime = viewModel.End,
+                TimeZone = "Asia/Ho_Chi_Minh"
+            };
+            model.Summary = viewModel.Title;
+        }
 
-            ViewModel.InitializeProperty();
-            if (Model.Attendees != null)
-                foreach (var item in Model.Attendees)
+        private void MappingEvent_To_EventVM(Event model, EventVM viewModel)
+        {
+            viewModel.Summary = model.Summary;
+            viewModel.Start = model.Start.DateTime == null ? DateTime.Now : (DateTime)model.Start.DateTime;
+            viewModel.End = model.End.DateTime == null ? DateTime.Now : (DateTime)model.End.DateTime;
+            viewModel.Description = model.Description;
+            viewModel.AttendeesOmitted = model.AttendeesOmitted == null ? false : (bool)model.AttendeesOmitted;
+            viewModel.Transparency = model.Transparency;
+            viewModel.Visibility = model.Visibility;
+            viewModel.GuestsCanInviteOthers = model.GuestsCanInviteOthers == null ? true : (bool)model.GuestsCanInviteOthers;
+            viewModel.GuestsCanModify = model.GuestsCanModify == null ? false : (bool)model.GuestsCanModify;
+            viewModel.GuestsCanSeeOtherGuests = model.GuestsCanSeeOtherGuests == null ? true : (bool)model.GuestsCanSeeOtherGuests;
+            viewModel.AnyoneCanAddSelf = model.AnyoneCanAddSelf == null ? false : (bool)model.AnyoneCanAddSelf;
+            viewModel.PrivateCopy = model.PrivateCopy == null ? false : (bool)model.PrivateCopy;
+            viewModel.Locked = model.Locked == null ? false : (bool)model.Locked;
+            viewModel.Location = model.Location;
+
+            viewModel.InitializeProperty();
+            if (model.Attendees != null)
+                foreach (var item in model.Attendees)
                 {
-                    ViewModel.Attendees.Add(new Attendee()
+                    viewModel.Attendees.Add(new Attendee()
                     {
                         Email = item.Email,
                         Optional = item.Optional == true ? true : false
                     });
                 }
-            if (Model.Reminders.UseDefault == false)
-                foreach (var item in Model.Reminders.Overrides)
+            if (model.Reminders.UseDefault == false)
+                foreach (var item in model.Reminders.Overrides)
                 {
-                    ViewModel.Reminders.Overrides.Add(new Reminder()
+                    viewModel.Reminders.Overrides.Add(new Reminder()
                     {
                         Method = item.Method,
                         Minutes = item.Minutes == null ? 0 : (int)item.Minutes
                     });
                 }
         }
+
+        private void MappingEvent_To_FullCalendarVM(Event model, FullCalendarEventVM viewModel)
+        {
+            viewModel.Id = model.Id;
+            viewModel.Title = model.Summary;
+            viewModel.Start = (DateTime)model.Start.DateTime;
+            viewModel.End = (DateTime)model.End.DateTime;
+        }
+
+
+
+
+
+        public void MappingToModel(Event model, object viewModel)
+        {
+            if (viewModel is EventVM)
+            {
+                MappingEventVM_To_Event(model, viewModel as EventVM);
+            }
+            else if (viewModel is FullCalendarEventVM)
+            {
+                MappingFullCalendarVM_To_Event(model, viewModel as FullCalendarEventVM);
+            }
+        }
+
+        public void MappingToViewModel(Event model, object viewModel)
+        {
+            if (viewModel is EventVM)
+            {
+                MappingEvent_To_EventVM(model, viewModel as EventVM);
+            }
+            else if (viewModel is FullCalendarEventVM)
+            {
+                MappingEvent_To_FullCalendarVM(model, viewModel as FullCalendarEventVM);
+            }
+        }
+
+
     }
+
 }
