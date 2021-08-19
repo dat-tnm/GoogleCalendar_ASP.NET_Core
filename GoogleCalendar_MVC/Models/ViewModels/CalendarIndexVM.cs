@@ -11,7 +11,6 @@ namespace GoogleCalendar_MVC.Models.ViewModels
     public class CalendarIndexVM
     {
         public IList<Event> Events { get; set; }
-        [Range(0, 12)]
         public DateTime SelectedMonthYear { get; set; }
     }
 }
