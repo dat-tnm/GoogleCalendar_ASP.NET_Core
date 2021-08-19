@@ -153,7 +153,7 @@ namespace GoogleCalendar_MVC.Controllers
 
             // Define parameters of request.
             EventsResource.ListRequest request = service.Events.List("primary");
-            request.TimeMin = Convert.ToDateTime($"01/{month_val}/{year_val} 00:00:00 AM");
+            request.TimeMin = Convert.ToDateTime($"01/01/0001 00:00:00 AM").AddMonths(month_val - 1).AddYears(year_val - 1);
             request.TimeMax = ((DateTime)request.TimeMin).AddMonths(1);
             request.ShowDeleted = false;
             request.SingleEvents = true;
