@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace GoogleCalendar_MVC.Models.ViewModels
 {
     public class Attendee
     {
+        [EmailAddress]
         public string Email { get; set; }
         public bool Resource { get; set; }
         public bool Optional { get; set; }
