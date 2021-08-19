@@ -9,19 +9,22 @@ namespace GoogleCalendar_MVC.Models.ViewModels
 {
     public class EventVM
     {
+        public EventVM()
+        {
+            GuestsCanInviteOthers = true;
+            GuestsCanSeeOtherGuests = true;
+        }
         public string Id { get; set; }
         [Required]
         public string Summary { get; set; }
         public string Description { get; set; }
         public string Location { get; set; }
-        public string ColorId { get; set; }
         [Required]
         public DateTime Start { get; set; }
         [Required]
         public DateTime End { get; set; }
         public string Transparency { get; set; }
         public string Visibility { get; set; }
-        public int Sequence { get; set; }
         public bool AnyoneCanAddSelf { get; set; }
         public bool GuestsCanInviteOthers { get; set; }
         public bool GuestsCanSeeOtherGuests { get; set; }
@@ -29,7 +32,6 @@ namespace GoogleCalendar_MVC.Models.ViewModels
         public bool PrivateCopy { get; set; }
         public bool Locked { get; set; }
         public bool AttendeesOmitted { get; set; }
-        public string EventType { get; set; }
 
         public IList<string> Recurrence { get; set; }
         public string RecurringEventId { get; set; }
