@@ -68,7 +68,7 @@
                 <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseAttendees" aria-expanded="true" aria-controls="collapseAttendees">
                     Attendees
                 </button>
-                <button type="button" onclick="addAttendeesForm()" class="btn btn-success"><i class="fas fa-plus"></i></button>
+                <button type="button" onclick="addForm('@Url.Action("GetAttendeesForm")','#Attendees')" class="btn btn-success"><i class="fas fa-plus"></i></button>
             </h5>
         </div>
 
@@ -103,10 +103,38 @@
                                     <input type="checkbox" name="Optionals" value="@item.Optional" class="form-control" />
                                 </div>
                             </div>
-                        <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                            <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     }
                     ViewBag.AttendeesNum = i + 1;
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" id="headingReminders">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseReminders" aria-expanded="true" aria-controls="collapseReminders">
+                    Reminder overrides
+                </button>
+                <button type="button" onclick="addForm('@Url.Action("GetRemindersForm")','#Reminders')" class="btn btn-success"><i class="fas fa-plus"></i></button>
+            </h5>
+        </div>
+
+        <div id="collapseReminders" class="collapse show" aria-labelledby="headingReminders">
+            <div class="card-body" id="Reminders">
+                @{
+                    foreach (var item in Model.Reminders.Overrides)
+                    {
+                        i++;
+                        <div id="gen-item-@i">
+                            <div class="text-danger">@item.Error</div>
+                            <partial name="_RemindersPartial" model="item"/>
+                            <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    }
+                    ViewBag.CountGenItem = i + 1;
                 }
             </div>
         </div>
@@ -126,12 +154,12 @@
 @section scripts
 {
     <script>
-        window.countAttendees = @ViewBag.AttendeesNum;
-        function addAttendeesForm() {
+        window.countGenItem = @ViewBag.CountGenItem;
+        function addForm(url, div_id) {
             let i = window.countAttendees++;
             $.ajax({
                 type: "GET",
-                url: "@Url.Action("GetAttendeesForm")",
+                url: url,
                 contentType: "application/json; charset=utf-8",
                 cache: false,
                 datatyype: "json",
@@ -140,7 +168,7 @@
                     items += data;
                     items += '<button type="button" onclick="deleteElement('+i+')" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>';
                     items += '</div>';
-                    $("#Attendees").append(items);
+                    $(div_id).append(items);
                 },
                 error: function () {
                     alert("Dynamic content load failed");

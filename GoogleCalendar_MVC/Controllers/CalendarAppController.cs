@@ -62,6 +62,9 @@ namespace GoogleCalendar_MVC.Controllers
 
         }
 
+        
+
+
 
 
 
@@ -108,15 +111,22 @@ namespace GoogleCalendar_MVC.Controllers
 
         public IActionResult Create()
         {
-            return View();
+            var viewModel = new EventVM() 
+            {
+                Start = DateTime.Now,
+                End = DateTime.Now
+            };
+            viewModel.InitializeProperty();
+            return View(viewModel);
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> Create([Bind("Summary,Start,End,Description")]EventVM viewModel)
+        public async Task<IActionResult> Create(EventVM viewModel)
         {
+            viewModel.InitializeProperty();
             var listAttendees = new List<EventAttendee>();
-            viewModel.Attendees = new List<Attendee>();
+            var listReminder = new List<EventReminder>();
             bool hasError = false;
             if (HttpContext.Request.Form.ContainsKey("Emails"))
             {
@@ -150,6 +160,45 @@ namespace GoogleCalendar_MVC.Controllers
                     }
                 }
             }
+
+            if (HttpContext.Request.Form.ContainsKey("Reminder-Method"))
+            {
+                string input_method;
+                EventReminder reminder;
+                for (int i = 0; i < HttpContext.Request.Form["Reminder-Method"].Count; i++)
+                {
+                    input_method = HttpContext.Request.Form["Reminder-Method"][i];
+                    if (input_method == "email" || input_method == "popup")
+                    {
+                        reminder = new EventReminder() { Method = input_method };
+                        try
+                        {
+                            reminder.Minutes = int.Parse(HttpContext.Request.Form["Reminder-Minutes"][i]);
+                            if (reminder.Minutes < 1 || reminder.Minutes > 40200)
+                            {
+                                throw new Exception();
+                            }
+                            listReminder.Add(reminder);
+                            viewModel.Reminders.Overrides.Add(new Reminder()
+                            {
+                                Method = input_method,
+                                Minutes = reminder.Minutes == null ? 0 : (int)reminder.Minutes
+                            });
+                        }
+                        catch (Exception)
+                        {
+                            viewModel.Reminders.Overrides.Add(new Reminder() { Method = input_method, Error = "Minutes is not valid. Minutes must greater than 0 and lower than 40200" });
+                            hasError = true;
+                        }
+                    }
+                    else
+                    {
+                        viewModel.Reminders.Overrides.Add(new Reminder() { Method = input_method, Error = "Method is not valid" });
+                        hasError = true;
+                    }
+                }
+            }
+
             if (hasError)
             {
                 return View(viewModel);
@@ -170,11 +219,16 @@ namespace GoogleCalendar_MVC.Controllers
                     TimeZone = "Asia/Ho_Chi_Minh"
                 },
                 Description = viewModel.Description,
-
+                Reminders = new Event.RemindersData()
             };
             if (listAttendees.Count > 0)
             {
                 body.Attendees = listAttendees;
+            }
+            if (listReminder.Count > 0)
+            {
+                body.Reminders.UseDefault = false;
+                body.Reminders.Overrides = listReminder;
             }
 
             var service = GetConfigCalendarService();
@@ -199,8 +253,8 @@ namespace GoogleCalendar_MVC.Controllers
                 Start = result.Start.DateTime == null ? DateTime.Now : (DateTime)result.Start.DateTime,
                 End = result.End.DateTime == null ? DateTime.Now : (DateTime)result.End.DateTime,
                 Description = result.Description,
-                Attendees = new List<Attendee>()
             };
+            viewModel.InitializeProperty();
             foreach (var item in result.Attendees)
             {
                 viewModel.Attendees.Add(new Attendee()
@@ -209,12 +263,21 @@ namespace GoogleCalendar_MVC.Controllers
                     Optional = item.Optional == true ? true : false
                 });
             }
+            if (result.Reminders.UseDefault == false)
+                foreach (var item in result.Reminders.Overrides)
+                {
+                    viewModel.Reminders.Overrides.Add(new Reminder()
+                    {
+                        Method = item.Method,
+                        Minutes = item.Minutes == null ? 0 : (int)item.Minutes
+                    });
+                }
 
             return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(string id, [Bind("Summary,Start,End,Description")] EventVM viewModel)
+        public async Task<IActionResult> Edit(string id, EventVM viewModel)
         {
             var service = GetConfigCalendarService();
             var get_request = service.Events.Get("primary", id);
@@ -228,8 +291,9 @@ namespace GoogleCalendar_MVC.Controllers
                 return NotFound();
             }
 
+            viewModel.InitializeProperty();
             var listAttendees = new List<EventAttendee>();
-            viewModel.Attendees = new List<Attendee>();
+            var listReminder = new List<EventReminder>();
             bool hasError = false;
             if (HttpContext.Request.Form.ContainsKey("Emails"))
             {
@@ -263,15 +327,56 @@ namespace GoogleCalendar_MVC.Controllers
                     }
                 }
             }
+
+            if (HttpContext.Request.Form.ContainsKey("Reminder-Method"))
+            {
+                string input_method;
+                EventReminder reminder;
+                for (int i = 0; i < HttpContext.Request.Form["Reminder-Method"].Count; i++)
+                {
+                    input_method = HttpContext.Request.Form["Reminder-Method"][i];
+                    if (input_method == "email" || input_method == "popup")
+                    {
+                        reminder = new EventReminder() { Method = input_method };
+                        try
+                        {
+                            reminder.Minutes = int.Parse(HttpContext.Request.Form["Reminder-Minutes"][i]);
+                            if(reminder.Minutes < 1 || reminder.Minutes > 40200)
+                            {
+                                throw new Exception();
+                            }
+                            listReminder.Add(reminder);
+                            viewModel.Reminders.Overrides.Add(new Reminder()
+                            {
+                                Method = input_method,
+                                Minutes = reminder.Minutes == null ? 0 : (int)reminder.Minutes
+                            });
+                        }
+                        catch (Exception) 
+                        {
+                            viewModel.Reminders.Overrides.Add(new Reminder() { Method = input_method, Error = "Minutes is not valid. Minutes must greater than 0 and lower than 40200" });
+                            hasError = true;
+                        }
+                    }
+                    else
+                    {
+                        viewModel.Reminders.Overrides.Add(new Reminder() { Method = input_method, Error = "Method is not valid" });
+                        hasError = true;
+                    }
+                }
+            }
+
             if (hasError)
             {
                 return View(viewModel);
             }
-            if (listAttendees.Count > 0)
-            {
-                result.Attendees = listAttendees;
-            }
 
+            if (listReminder.Count > 0)
+            {
+                result.Reminders.UseDefault = false;
+                result.Reminders.Overrides = listReminder;
+            }
+            result.Attendees = listAttendees;
             result.Summary = viewModel.Summary;
             result.Start.DateTime = viewModel.Start;
             result.End.DateTime = viewModel.End;
@@ -311,7 +416,12 @@ namespace GoogleCalendar_MVC.Controllers
 
         public IActionResult GetAttendeesForm()
         {
-            return PartialView("_AttendeesPartial");
+            return PartialView("_AttendeesPartial", new Attendee());
+        }
+
+        public IActionResult GetRemindersForm()
+        {
+            return PartialView("_RemindersPartial", new Reminder());
         }
     }
 }
