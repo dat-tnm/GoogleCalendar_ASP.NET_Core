@@ -37,5 +37,13 @@ namespace GoogleCalendar_MVC.Models.ViewModels
         public ExtendedProperties ExtendedProperties { get; set; }
         public Reminders Reminders { get; set; }
         public IList<Attachment> Attachments { get; set; }
+
+        public void InitializeProperty()
+        {
+            this.Attendees = new List<Attendee>();
+            this.Reminders = new Reminders() { Overrides = new List<Reminder>() };
+            this.ExtendedProperties = new ExtendedProperties();
+            this.Recurrence = new List<string>();
+        }
     }
 }
