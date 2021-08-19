@@ -57,7 +57,7 @@ namespace GoogleCalendar_MVC.Controllers
             }
 
             DateTime timeMin = Convert.ToDateTime($"01/01/0001 00:00:00 AM").AddMonths(month_val - 1).AddYears(year_val - 1);
-            var events = await _eventRepo.GetList(request =>
+            var events = await _eventRepo.GetListAsync(request =>
             {
                 request.TimeMin = timeMin;
                 request.TimeMax = ((DateTime)request.TimeMin).AddMonths(1);
@@ -173,7 +173,7 @@ namespace GoogleCalendar_MVC.Controllers
 
 
             Event eventToCreate = new Event();
-            new EventModelMapper(eventToCreate, viewModel).MappingToModel();
+            new EventModelMapper().MappingToModel(eventToCreate, viewModel);
 
             if (listAttendees.Count > 0)
             {
@@ -186,7 +186,7 @@ namespace GoogleCalendar_MVC.Controllers
                 eventToCreate.Reminders.Overrides = listReminder;
             }
 
-            var result = await _eventRepo.Create(eventToCreate);
+            var result = await _eventRepo.CreateAsync(eventToCreate);
             if(result == null)
             {
                 ModelState.AddModelError("error", "Some values are not valid!");
@@ -198,14 +198,14 @@ namespace GoogleCalendar_MVC.Controllers
 
         public async Task<IActionResult> Edit(string id)
         {
-            Event result = await _eventRepo.Get(id);
+            Event result = await _eventRepo.GetAsync(id);
             if(result == null)
             {
                 return NotFound();
             }
 
             var viewModel = new EventVM();
-            new EventModelMapper(result, viewModel).MappingToViewModel();
+            new EventModelMapper().MappingToViewModel(result, viewModel);
             
             return View(viewModel);
         }
@@ -213,7 +213,7 @@ namespace GoogleCalendar_MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(string id, EventVM viewModel)
         {
-            Event result = await _eventRepo.Get(id);
+            Event result = await _eventRepo.GetAsync(id);
             if(result == null)
             {
                 return NotFound();
@@ -305,9 +305,9 @@ namespace GoogleCalendar_MVC.Controllers
                 result.Reminders.Overrides = listReminder;
             }
             result.Attendees = listAttendees;
-            new EventModelMapper(result, viewModel).MappingToModel();
+            new EventModelMapper().MappingToModel(result, viewModel);
 
-            bool success = await _eventRepo.Update(id, result);
+            bool success = await _eventRepo.UpdateAsync(id, result);
             if (!success)
             {
                 ModelState.AddModelError("error", "Some values are not valid!");
@@ -321,7 +321,7 @@ namespace GoogleCalendar_MVC.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(string id)
         {
-            if (await _eventRepo.Delete(id))
+            if (await _eventRepo.DeleteAsync(id))
             {
                 return Json(new { success = true, message = "Delete Successful" });
             }
