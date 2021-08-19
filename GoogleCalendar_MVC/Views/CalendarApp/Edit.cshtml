@@ -1,6 +1,6 @@
 ﻿@model GoogleCalendar_MVC.Models.ViewModels.EventVM
 @{
-    ViewBag.Title = "Create new Event";
+    ViewBag.Title = "Edit Event";
 }
 
 <br />
@@ -8,7 +8,7 @@
 <br />
 
 <form method="post" asp-action="Edit">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="All" class="text-danger"></div>
     <input type="hidden" asp-for="Id" />
 
     <div class="card">
@@ -58,6 +58,22 @@
                     </div>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" id="headingSettings">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
+                    Addtional Settings
+                </button>
+            </h5>
+        </div>
+
+        <div id="collapseSettings" class="collapse show" aria-labelledby="headingSettings">
+            <div class="card-body" id="Settings">
+                <partial name="_AdditionalEventInfosPartial" model="Model" />
             </div>
         </div>
     </div>
@@ -130,7 +146,7 @@
                         i++;
                         <div id="gen-item-@i">
                             <div class="text-danger">@item.Error</div>
-                            <partial name="_RemindersPartial" model="item"/>
+                            <partial name="_RemindersPartial" model="item" />
                             <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     }

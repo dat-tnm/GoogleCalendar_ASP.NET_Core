@@ -26,13 +26,11 @@ namespace GoogleCalendar_MVC.Controllers
     [Authorize]
     public class CalendarAppController : Controller
     {
-        private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly ApplicationDbContext _db;
 
 
-        public CalendarAppController(IWebHostEnvironment hostingEnvironment, ApplicationDbContext db)
+        public CalendarAppController(ApplicationDbContext db)
         {
-            _hostingEnvironment = hostingEnvironment;
             _db = db;
         }
 
@@ -62,7 +60,70 @@ namespace GoogleCalendar_MVC.Controllers
 
         }
 
-        
+        private void MappingViewModelToModel(EventVM viewModel, Event model)
+        {
+            model.Summary = viewModel.Summary;
+            model.Start = new EventDateTime()
+            {
+                DateTime = viewModel.Start,
+                TimeZone = "Asia/Ho_Chi_Minh"
+            };
+            model.End = new EventDateTime()
+            {
+                DateTime = viewModel.End,
+                TimeZone = "Asia/Ho_Chi_Minh"
+            };
+            model.Description = viewModel.Description;
+            model.AttendeesOmitted = viewModel.AttendeesOmitted;
+            model.Transparency = viewModel.Transparency;
+            model.Visibility = viewModel.Visibility;
+            model.GuestsCanInviteOthers = viewModel.GuestsCanInviteOthers;
+            model.GuestsCanModify = viewModel.GuestsCanModify;
+            model.GuestsCanSeeOtherGuests = viewModel.GuestsCanSeeOtherGuests;
+            model.AnyoneCanAddSelf = viewModel.AnyoneCanAddSelf;
+            model.PrivateCopy = viewModel.PrivateCopy;
+            model.Locked = viewModel.Locked;
+            model.Location = viewModel.Location;
+        }
+
+        private void MappingModelToViewModel(Event model, EventVM viewModel)
+        {
+            viewModel.Summary = model.Summary;
+            viewModel.Start = model.Start.DateTime == null ? DateTime.Now : (DateTime)model.Start.DateTime;
+            viewModel.End = model.Start.DateTime == null ? DateTime.Now : (DateTime)model.Start.DateTime;
+            viewModel.Description = model.Description;
+            viewModel.AttendeesOmitted = model.AttendeesOmitted == null ? false : (bool)model.AttendeesOmitted;
+            viewModel.Transparency = model.Transparency;
+            viewModel.Visibility = model.Visibility;
+            viewModel.GuestsCanInviteOthers = model.GuestsCanInviteOthers == null ? true : (bool)model.GuestsCanInviteOthers;
+            viewModel.GuestsCanModify = model.GuestsCanModify == null ? false : (bool)model.GuestsCanModify;
+            viewModel.GuestsCanSeeOtherGuests = model.GuestsCanSeeOtherGuests == null ? true : (bool)model.GuestsCanSeeOtherGuests;
+            viewModel.AnyoneCanAddSelf = model.AnyoneCanAddSelf == null ? false : (bool)model.AnyoneCanAddSelf;
+            viewModel.PrivateCopy = model.PrivateCopy == null ? false : (bool)model.PrivateCopy;
+            viewModel.Locked = model.Locked == null ? false : (bool)model.Locked;
+            viewModel.Location = model.Location;
+
+            viewModel.InitializeProperty();
+            if(model.Attendees != null)
+                foreach (var item in model.Attendees)
+                {
+                    viewModel.Attendees.Add(new Attendee()
+                    {
+                        Email = item.Email,
+                        Optional = item.Optional == true ? true : false
+                    });
+                }
+            if (model.Reminders.UseDefault == false)
+                foreach (var item in model.Reminders.Overrides)
+                {
+                    viewModel.Reminders.Overrides.Add(new Reminder()
+                    {
+                        Method = item.Method,
+                        Minutes = item.Minutes == null ? 0 : (int)item.Minutes
+                    });
+                }
+        }
+
 
 
 
@@ -203,39 +264,31 @@ namespace GoogleCalendar_MVC.Controllers
             {
                 return View(viewModel);
             }
-            
 
-            Event body = new Event()
-            {
-                Summary = viewModel.Summary,
-                Start = new EventDateTime()
-                {
-                    DateTime = viewModel.Start,
-                    TimeZone = "Asia/Ho_Chi_Minh"
-                },
-                End = new EventDateTime()
-                {
-                    DateTime = viewModel.End,
-                    TimeZone = "Asia/Ho_Chi_Minh"
-                },
-                Description = viewModel.Description,
-                Reminders = new Event.RemindersData()
-            };
+
+            Event body = new Event();
+            MappingViewModelToModel(viewModel, body);
+
             if (listAttendees.Count > 0)
             {
                 body.Attendees = listAttendees;
             }
             if (listReminder.Count > 0)
             {
+                body.Reminders = new Event.RemindersData();
                 body.Reminders.UseDefault = false;
                 body.Reminders.Overrides = listReminder;
             }
 
             var service = GetConfigCalendarService();
             var request = service.Events.Insert(body, "primary");
-            Event result = await request.ExecuteAsync();
-            if (string.IsNullOrEmpty(result.Id))
+            try
             {
+                Event result = await request.ExecuteAsync();
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("error", "Some values are not valid!");
                 return View(viewModel);
             }
 
@@ -246,33 +299,18 @@ namespace GoogleCalendar_MVC.Controllers
         {
             var service = GetConfigCalendarService();
             var request = service.Events.Get("primary", id);
-            Event result = await request.ExecuteAsync();
-            var viewModel = new EventVM()
+            Event result;
+            try
             {
-                Summary = result.Summary,
-                Start = result.Start.DateTime == null ? DateTime.Now : (DateTime)result.Start.DateTime,
-                End = result.End.DateTime == null ? DateTime.Now : (DateTime)result.End.DateTime,
-                Description = result.Description,
-            };
-            viewModel.InitializeProperty();
-            foreach (var item in result.Attendees)
-            {
-                viewModel.Attendees.Add(new Attendee()
-                {
-                    Email = item.Email,
-                    Optional = item.Optional == true ? true : false
-                });
+                result = await request.ExecuteAsync();
             }
-            if (result.Reminders.UseDefault == false)
-                foreach (var item in result.Reminders.Overrides)
-                {
-                    viewModel.Reminders.Overrides.Add(new Reminder()
-                    {
-                        Method = item.Method,
-                        Minutes = item.Minutes == null ? 0 : (int)item.Minutes
-                    });
-                }
-
+            catch (Exception)
+            {
+                return NotFound();
+            }
+            var viewModel = new EventVM();
+            MappingModelToViewModel(result, viewModel);
+            
             return View(viewModel);
         }
 
@@ -377,13 +415,18 @@ namespace GoogleCalendar_MVC.Controllers
                 result.Reminders.Overrides = listReminder;
             }
             result.Attendees = listAttendees;
-            result.Summary = viewModel.Summary;
-            result.Start.DateTime = viewModel.Start;
-            result.End.DateTime = viewModel.End;
-            result.Description = viewModel.Description;
+            MappingViewModelToModel(viewModel, result);
 
             var post_request = service.Events.Update(result, "primary", result.Id);
-            var post_result = await post_request.ExecuteAsync();
+            try
+            {
+                await post_request.ExecuteAsync();
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("error", "Some values are not valid!");
+                return View(viewModel);
+            }
 
             return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
         }
