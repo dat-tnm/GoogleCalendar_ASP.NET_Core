@@ -60,70 +60,9 @@ namespace GoogleCalendar_MVC.Controllers
 
         }
 
-        private void MappingViewModelToModel(EventVM viewModel, Event model)
-        {
-            model.Summary = viewModel.Summary;
-            model.Start = new EventDateTime()
-            {
-                DateTime = viewModel.Start,
-                TimeZone = "Asia/Ho_Chi_Minh"
-            };
-            model.End = new EventDateTime()
-            {
-                DateTime = viewModel.End,
-                TimeZone = "Asia/Ho_Chi_Minh"
-            };
-            model.Description = viewModel.Description;
-            model.AttendeesOmitted = viewModel.AttendeesOmitted;
-            model.Transparency = viewModel.Transparency;
-            model.Visibility = viewModel.Visibility;
-            model.GuestsCanInviteOthers = viewModel.GuestsCanInviteOthers;
-            model.GuestsCanModify = viewModel.GuestsCanModify;
-            model.GuestsCanSeeOtherGuests = viewModel.GuestsCanSeeOtherGuests;
-            model.AnyoneCanAddSelf = viewModel.AnyoneCanAddSelf;
-            model.PrivateCopy = viewModel.PrivateCopy;
-            model.Locked = viewModel.Locked;
-            model.Location = viewModel.Location;
-        }
+        
 
-        private void MappingModelToViewModel(Event model, EventVM viewModel)
-        {
-            viewModel.Summary = model.Summary;
-            viewModel.Start = model.Start.DateTime == null ? DateTime.Now : (DateTime)model.Start.DateTime;
-            viewModel.End = model.Start.DateTime == null ? DateTime.Now : (DateTime)model.Start.DateTime;
-            viewModel.Description = model.Description;
-            viewModel.AttendeesOmitted = model.AttendeesOmitted == null ? false : (bool)model.AttendeesOmitted;
-            viewModel.Transparency = model.Transparency;
-            viewModel.Visibility = model.Visibility;
-            viewModel.GuestsCanInviteOthers = model.GuestsCanInviteOthers == null ? true : (bool)model.GuestsCanInviteOthers;
-            viewModel.GuestsCanModify = model.GuestsCanModify == null ? false : (bool)model.GuestsCanModify;
-            viewModel.GuestsCanSeeOtherGuests = model.GuestsCanSeeOtherGuests == null ? true : (bool)model.GuestsCanSeeOtherGuests;
-            viewModel.AnyoneCanAddSelf = model.AnyoneCanAddSelf == null ? false : (bool)model.AnyoneCanAddSelf;
-            viewModel.PrivateCopy = model.PrivateCopy == null ? false : (bool)model.PrivateCopy;
-            viewModel.Locked = model.Locked == null ? false : (bool)model.Locked;
-            viewModel.Location = model.Location;
-
-            viewModel.InitializeProperty();
-            if(model.Attendees != null)
-                foreach (var item in model.Attendees)
-                {
-                    viewModel.Attendees.Add(new Attendee()
-                    {
-                        Email = item.Email,
-                        Optional = item.Optional == true ? true : false
-                    });
-                }
-            if (model.Reminders.UseDefault == false)
-                foreach (var item in model.Reminders.Overrides)
-                {
-                    viewModel.Reminders.Overrides.Add(new Reminder()
-                    {
-                        Method = item.Method,
-                        Minutes = item.Minutes == null ? 0 : (int)item.Minutes
-                    });
-                }
-        }
-
+        
 
 
 
@@ -267,7 +206,7 @@ namespace GoogleCalendar_MVC.Controllers
 
 
             Event body = new Event();
-            MappingViewModelToModel(viewModel, body);
+            new EventModelMapper(body, viewModel).MappingToModel();
 
             if (listAttendees.Count > 0)
             {
@@ -309,7 +248,7 @@ namespace GoogleCalendar_MVC.Controllers
                 return NotFound();
             }
             var viewModel = new EventVM();
-            MappingModelToViewModel(result, viewModel);
+            new EventModelMapper(result, viewModel).MappingToViewModel();
             
             return View(viewModel);
         }
@@ -415,7 +354,7 @@ namespace GoogleCalendar_MVC.Controllers
                 result.Reminders.Overrides = listReminder;
             }
             result.Attendees = listAttendees;
-            MappingViewModelToModel(viewModel, result);
+            new EventModelMapper(result, viewModel).MappingToModel();
 
             var post_request = service.Events.Update(result, "primary", result.Id);
             try
