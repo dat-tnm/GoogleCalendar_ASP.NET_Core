@@ -92,7 +92,7 @@
                             <div class="text-danger">@item.Error</div>
                             <partial name="_AttendeesPartial" model="item" />
                             <div class="row">
-                                <div class="col-md-6 text-right">
+                                <div class="col-12 text-right">
                                     <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </div>
@@ -124,7 +124,7 @@
                             <div class="text-danger">@item.Error</div>
                             <partial name="_RemindersPartial" model="item" />
                             <div class="row">
-                                <div class="col-md-6 text-right">
+                                <div class="col-12 text-right">
                                     <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </div>
@@ -142,13 +142,13 @@
             </div>
         </div>
     </div>
-    <div class="modal-footer row">
-        <div class="col-md-6">
+    <div class="row">
+        <div class="col-md-6 text-left">
             <button type="button" class="btn btn-success" id="event-edit-submit" data-dismiss="modal">Save changes</button>
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
         <div class="col-md-6 text-right">
-            <button type="button" class="btn btn-danger text-left" onclick="DeleteWithoutReload('@Url.Action("Delete", "CalendarApp", new { id = Model.Id })');" data-dismiss="modal"><i class="fas fa-trash-alt"></i></button>
+            <button type="button" class="btn btn-danger text-left" onclick="DeleteWithoutReload('@Url.Action("Delete", "CalendarApp", new { id = Model.Id })');"><i class="fas fa-trash-alt"></i></button>
         </div>
     </div>
 </form>
@@ -167,7 +167,7 @@
             success: function (data) {
                 items = '<div id="gen-item-'+i+'">';
                 items += data;
-                items += '<button type="button" onclick="deleteElement('+i+')" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>';
+                items += '<div class="row"><div class="col-12 text-right"><button type="button" onclick="deleteElement('+i+')" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button></div></div>';
                 items += '</div>';
                 $(div_id).append(items);
             },
@@ -180,3 +180,5 @@
         $('#gen-item-' + i).remove();
     };
 </script>
+
+
