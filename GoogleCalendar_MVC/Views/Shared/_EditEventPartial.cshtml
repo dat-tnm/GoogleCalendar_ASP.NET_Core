@@ -1,0 +1,174 @@
+﻿@model GoogleCalendar_MVC.Models.ViewModels.EventVM
+
+<form method="post" action="/CalendarApp/Edit/@Model.Id">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="card">
+        <div class="card-header" id="headingOne">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Event infomation
+                </button>
+            </h5>
+        </div>
+
+        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
+            <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label asp-for="Summary"></label>
+                    </div>
+                    <div class="col-md-8">
+                        <input asp-for="Summary" class="form-control" />
+                    </div>
+                    <span asp-validation-for="Summary" class="text-danger"></span>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label asp-for="Start"></label>
+                    </div>
+                    <div class="col-md-8">
+                        <input asp-for="Start" class="form-control" />
+                    </div>
+                    <span asp-validation-for="Start" class="text-danger"></span>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label asp-for="End"></label>
+                    </div>
+                    <div class="col-md-8">
+                        <input asp-for="End" class="form-control" />
+                    </div>
+                    <span asp-validation-for="End" class="text-danger"></span>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label asp-for="Description"></label>
+                    </div>
+                    <div class="col-md-8">
+                        <input asp-for="Description" class="form-control" />
+                    </div>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" id="headingSettings">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
+                    Addtional Settings
+                </button>
+            </h5>
+        </div>
+
+        <div id="collapseSettings" class="collapse hide" aria-labelledby="headingSettings">
+            <div class="card-body" id="Settings">
+                <partial name="_AdditionalEventInfosPartial" model="Model" />
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" id="headingAttendees">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseAttendees" aria-expanded="true" aria-controls="collapseAttendees">
+                    Attendees
+                </button>
+                <button type="button" onclick="addForm('@Url.Action("GetAttendeesForm")','#Attendees')" class="btn btn-success"><i class="fas fa-plus"></i></button>
+            </h5>
+        </div>
+
+        <div id="collapseAttendees" class="collapse show" aria-labelledby="headingAttendees">
+            <div class="card-body" id="Attendees">
+                @{
+                    int i = 0;
+                    foreach (var item in Model.Attendees)
+                    {
+                        i++;
+                        <div id="gen-item-@i">
+                            <div class="text-danger">@item.Error</div>
+                            <partial name="_AttendeesPartial" model="item" />
+                            <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    }
+                    ViewBag.AttendeesNum = i + 1;
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" id="headingReminders">
+            <h5 class="mb-0">
+                <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseReminders" aria-expanded="true" aria-controls="collapseReminders">
+                    Reminder overrides
+                </button>
+                <button type="button" onclick="addForm('@Url.Action("GetRemindersForm")','#Reminders')" class="btn btn-success"><i class="fas fa-plus"></i></button>
+            </h5>
+        </div>
+
+        <div id="collapseReminders" class="collapse show" aria-labelledby="headingReminders">
+            <div class="card-body" id="Reminders">
+                @{
+                    foreach (var item in Model.Reminders.Overrides)
+                    {
+                        i++;
+                        <div id="gen-item-@i">
+                            <div class="text-danger">@item.Error</div>
+                            <partial name="_RemindersPartial" model="item" />
+                            <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    }
+                    ViewBag.CountGenItem = i + 1;
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-5 offset-2">
+            <div class="btn-group">
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer row">
+        <div class="col-md-6">
+            <button type="button" class="btn btn-success" id="event-edit-submit" data-dismiss="modal">Save changes</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+        <div class="col-md-6 text-right">
+            <button type="button" class="btn btn-danger text-left" onclick="DeleteWithoutReload('@Url.Action("Delete", "CalendarApp", new { id = Model.Id })');" data-dismiss="modal"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </div>
+</form>
+
+
+<script>
+    window.countGenItem = @ViewBag.CountGenItem;
+    function addForm(url, div_id) {
+        let i = window.countAttendees++;
+        $.ajax({
+            type: "GET",
+            url: url,
+            contentType: "application/json; charset=utf-8",
+            cache: false,
+            datatype: "json",
+            success: function (data) {
+                items = '<div id="gen-item-'+i+'">';
+                items += data;
+                items += '<button type="button" onclick="deleteElement('+i+')" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>';
+                items += '</div>';
+                $(div_id).append(items);
+            },
+            error: function () {
+                alert("Dynamic content load failed");
+            }
+        });
+    };
+    function deleteElement(i) {
+        $('#gen-item-' + i).remove();
+    };
+</script>

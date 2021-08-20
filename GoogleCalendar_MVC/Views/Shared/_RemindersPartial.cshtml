@@ -1,18 +1,18 @@
 ﻿@model  GoogleCalendar_MVC.Models.ViewModels.Reminder
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label>Method</label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <select class="form-control" name="Reminder-Method">
             <option value="email" selected="@(Model.Method == "email" ? "selected" : "")">email</option>
             <option value="popup" selected="@(Model.Method == "popup" ? "selected" : "")">popup</option>
         </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label>Minutes</label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="number" name="Reminder-Minutes" value="@Model.Minutes" class="form-control" />
         <span asp-validation-for="Minutes" class="text-danger"></span>
     </div>

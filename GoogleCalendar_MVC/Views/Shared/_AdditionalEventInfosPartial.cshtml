@@ -1,25 +1,25 @@
 ﻿@model GoogleCalendar_MVC.Models.ViewModels.EventVM 
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-4">
         <label asp-for="Location"></label>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-8">
         <input asp-for="Location" class="form-control" />
     </div>
 </div>
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-4">
         <label>Omitted invitation</label>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-8">
         <input type="checkbox" asp-for="AttendeesOmitted" class="form-control" />
     </div>
 </div>
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-4">
         <label>Show me as</label>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-8">
         <select asp-for="Transparency" class="form-control">
             <option value="opaque" selected="@(Model.Transparency == "opaque" ? "selected" : "")">Busy</option>
             <option value="transparent" selected="@(Model.Transparency == "transparent" ? "selected" : "")">Available</option>
@@ -27,10 +27,10 @@
     </div>
 </div>
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-4">
         <label asp-for="Visibility"></label>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-8">
         <select asp-for="Visibility" class="form-control">
             <option value="default" selected="@(Model.Visibility == "default" ? "selected" : "")">default</option>
             <option value="public" selected="@(Model.Visibility == "public" ? "selected" : "")">public</option>
@@ -40,44 +40,44 @@
     </div>
 </div>
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label asp-for="GuestsCanInviteOthers"></label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="checkbox" asp-for="GuestsCanInviteOthers" class="form-control" />
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label asp-for="GuestsCanModify"></label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="checkbox" asp-for="GuestsCanModify" class="form-control" />
     </div>
 </div>
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label asp-for="GuestsCanSeeOtherGuests"></label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="checkbox" asp-for="GuestsCanSeeOtherGuests" class="form-control" />
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label asp-for="AnyoneCanAddSelf"></label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="checkbox" asp-for="AnyoneCanAddSelf" class="form-control" />
     </div>
 </div>
 <div class="form-group row">
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label asp-for="PrivateCopy"></label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="checkbox" asp-for="PrivateCopy" class="form-control" />
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label asp-for="Locked"></label>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input type="checkbox" asp-for="Locked" class="form-control" />
     </div>
 </div>
