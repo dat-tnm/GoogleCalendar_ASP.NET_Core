@@ -91,7 +91,11 @@
                         <div id="gen-item-@i">
                             <div class="text-danger">@item.Error</div>
                             <partial name="_AttendeesPartial" model="item" />
-                            <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                            <div class="row">
+                                <div class="col-md-6 text-right">
+                                    <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
                         </div>
                     }
                     ViewBag.AttendeesNum = i + 1;
@@ -119,7 +123,11 @@
                         <div id="gen-item-@i">
                             <div class="text-danger">@item.Error</div>
                             <partial name="_RemindersPartial" model="item" />
-                            <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                            <div class="row">
+                                <div class="col-md-6 text-right">
+                                    <button type="button" onclick="deleteElement(@i)" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
                         </div>
                     }
                     ViewBag.CountGenItem = i + 1;
