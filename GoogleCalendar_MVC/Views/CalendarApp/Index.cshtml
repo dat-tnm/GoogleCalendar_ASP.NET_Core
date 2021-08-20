@@ -98,14 +98,12 @@
             },
             eventDrop: function (event, delta, revertFunc) {
                 var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
-                var title = event.title;
                 var id = event.id;
-                console.log(delta.minutes());
                 $.ajax({
                     url: '@Url.Action("UpdateEvent", "EventsApi")',
                     type: 'PUT',
                     contentType: 'application/json',
-                    data: JSON.stringify({ id: id, title: title, start: start}),
+                    data: JSON.stringify({ id: id, start: start, minutes: delta.asMinutes()}),
                     success: function () {
                         calendar.fullCalendar('refetchEvents');
                         toastr.success("Event Updated");

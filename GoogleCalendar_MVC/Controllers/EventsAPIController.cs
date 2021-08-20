@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Dynamic;
+using GoogleCalendar_MVC.Models.DataTransferObjects;
 
 namespace GoogleCalendar_MVC.Controllers
 {
@@ -103,15 +104,15 @@ namespace GoogleCalendar_MVC.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateEvent([FromBody] ExpandoObject jsonObj)
         {
-            FullCalendarEventVM viewModel = new FullCalendarEventVM(jsonObj);
+            FullCalendarUpdateStartDTO viewModel = new FullCalendarUpdateStartDTO(jsonObj);
 
             var result = await _eventRepo.GetAsync(viewModel.Id);
             if (result == null)
             {
                 return NotFound();
             }
-            viewModel.End = (DateTime)result.End.DateTime;
-            new EventModelMapper().MappingToModel(result, viewModel);
+            result.Start.DateTime = viewModel.Start;
+            result.End.DateTime = ((DateTime)result.End.DateTime).AddMinutes(viewModel.Minutes);
 
             bool success = await _eventRepo.UpdateAsync(viewModel.Id, result);
             if (!success)
