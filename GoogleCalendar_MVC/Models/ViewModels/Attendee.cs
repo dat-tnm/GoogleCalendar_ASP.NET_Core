@@ -6,8 +6,6 @@ namespace GoogleCalendar_MVC.Models.ViewModels
     {
         [EmailAddress]
         public string Email { get; set; }
-        public bool Resource { get; set; }
-        public bool Optional { get; set; }
         public string Error { get; set; }
     }
 }

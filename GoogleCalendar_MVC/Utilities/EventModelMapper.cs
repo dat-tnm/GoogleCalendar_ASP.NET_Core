@@ -74,8 +74,7 @@ namespace GoogleCalendar_MVC.Utilities
                 {
                     viewModel.Attendees.Add(new Attendee()
                     {
-                        Email = item.Email,
-                        Optional = item.Optional == true ? true : false
+                        Email = item.Email
                     });
                 }
             if (model.Reminders.UseDefault == false)

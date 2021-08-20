@@ -120,9 +120,7 @@ namespace GoogleCalendar_MVC.Controllers
                         listAttendees.Add(attendee);
                         viewModel.Attendees.Add(new Attendee()
                         {
-                            Email = input_email,
-                            Optional = attendee.Optional == true ? true : false,
-                            Resource = attendee.Resource == true ? true : false
+                            Email = input_email
                         });
                     }
                     else
@@ -262,9 +260,7 @@ namespace GoogleCalendar_MVC.Controllers
                         listAttendees.Add(attendee);
                         viewModel.Attendees.Add(new Attendee()
                         {
-                            Email = input_email,
-                            Optional = attendee.Optional == true ? true : false,
-                            Resource = attendee.Resource == true ? true : false
+                            Email = input_email
                         });
                     }
                     else
