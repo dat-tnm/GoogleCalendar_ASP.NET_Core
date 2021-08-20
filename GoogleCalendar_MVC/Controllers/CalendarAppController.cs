@@ -201,6 +201,20 @@ namespace GoogleCalendar_MVC.Controllers
             return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
         }
 
+        public async Task<IActionResult> GetEditForm(string id)
+        {
+            Event result = await _eventRepo.GetAsync(id);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new EventVM();
+            new EventModelMapper().MappingToViewModel(result, viewModel);
+
+            return PartialView("_EditEventPartial",viewModel);
+        }
+
         public async Task<IActionResult> Edit(string id)
         {
             Event result = await _eventRepo.GetAsync(id);
@@ -319,7 +333,8 @@ namespace GoogleCalendar_MVC.Controllers
                 return View(viewModel);
             }
 
-            return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
+            //return RedirectToAction("Index", new { month = viewModel.Start.Month, year = viewModel.Start.Year });
+            return Ok();
         }
 
 
