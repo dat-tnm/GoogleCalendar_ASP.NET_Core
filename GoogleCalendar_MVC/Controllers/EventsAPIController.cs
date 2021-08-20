@@ -30,11 +30,12 @@ namespace GoogleCalendar_MVC.Controllers
         [HttpGet]
         public async Task<IActionResult> GetListEvent([FromQuery] string start, [FromQuery] string end)
         {
-            var startEndTime = new StartEndTime();
+            DateTime startDate;
+            DateTime endDate;
             try
             {
-                startEndTime.Start = Convert.ToDateTime(start);
-                startEndTime.End = Convert.ToDateTime(end);
+                startDate = Convert.ToDateTime(start);
+                endDate = Convert.ToDateTime(end);
             }
             catch (Exception)
             {
@@ -43,8 +44,8 @@ namespace GoogleCalendar_MVC.Controllers
 
             var events = await _eventRepo.GetListAsync(request =>
             {
-                request.TimeMin = startEndTime.Start;
-                request.TimeMax = startEndTime.End;
+                request.TimeMin = startDate;
+                request.TimeMax = endDate;
                 request.ShowDeleted = false;
                 request.SingleEvents = true;
                 request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
