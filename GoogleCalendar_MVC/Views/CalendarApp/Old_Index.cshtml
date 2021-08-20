@@ -1,0 +1,61 @@
+﻿@model GoogleCalendar_MVC.Models.ViewModels.CalendarIndexVM
+@{
+    ViewBag.Title = "Calendar app";
+}
+
+
+<div class="row">
+    <div class="col-6">
+        <h2>Upcoming Event</h2>
+        <div>
+            @if (Model.SelectedMonthYear.Year == 1 && Model.SelectedMonthYear.Month == 1)
+            {
+                <a class="btn btn-info disabled" href="#"><i class="fas fa-arrow-left"></i></a>
+            }
+            else
+            {
+                <a class="btn btn-info" href="@(ViewContext.HttpContext.Request.Path + $"?month={Model.SelectedMonthYear.AddMonths(-1).Month}&year={Model.SelectedMonthYear.AddMonths(-1).Year}")"><i class="fas fa-arrow-left"></i></a>
+            }
+            Calendar: @Model.SelectedMonthYear.Month/@Model.SelectedMonthYear.Year
+            <a class="btn btn-info" href="@(ViewContext.HttpContext.Request.Path + $"?month={Model.SelectedMonthYear.AddMonths(1).Month}&year={Model.SelectedMonthYear.AddMonths(1).Year}")"><i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+    <div class="col-6 text-right">
+        <a class="btn btn-success" asp-action="Create" asp-controller="CalendarApp"><i class="fas fa-plus"></i>&nbsp; Create new event</a>
+    </div>
+</div>
+
+<div>
+@if (Model.Events.Count > 0)
+{
+	<table class="table table-stripe table-border">
+        <tr>
+            <th>Id</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Summary</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+        @foreach (var item in Model.Events)
+        {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.Start.DateTime</td>
+            <td>@item.End.DateTime</td>
+            <td>@item.Summary</td>
+            <td>@item.Description</td>
+            <td class="btn-group">
+                <a class="btn btn-info"><i class="fas fa-clipboard"></i></a>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                <button class="btn btn-danger" onclick="Delete('@Url.Action("Delete", new {id = item.Id})')" ><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>
+        }
+    </table>
+}
+else
+{
+    <p>Don't have any event yet.</p>
+}
+</div>

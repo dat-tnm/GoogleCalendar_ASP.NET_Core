@@ -1,61 +1,174 @@
-﻿@model GoogleCalendar_MVC.Models.ViewModels.CalendarIndexVM
-@{
-    ViewBag.Title = "Calendar app";
+﻿@{
+    ViewBag.Title = "Calendar App";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css">
 
-<div class="row">
-    <div class="col-6">
-        <h2>Upcoming Event</h2>
-        <div>
-            @if (Model.SelectedMonthYear.Year == 1 && Model.SelectedMonthYear.Month == 1)
-            {
-                <a class="btn btn-info disabled" href="#"><i class="fas fa-arrow-left"></i></a>
-            }
-            else
-            {
-                <a class="btn btn-info" href="@(ViewContext.HttpContext.Request.Path + $"?month={Model.SelectedMonthYear.AddMonths(-1).Month}&year={Model.SelectedMonthYear.AddMonths(-1).Year}")"><i class="fas fa-arrow-left"></i></a>
-            }
-            Calendar: @Model.SelectedMonthYear.Month/@Model.SelectedMonthYear.Year
-            <a class="btn btn-info" href="@(ViewContext.HttpContext.Request.Path + $"?month={Model.SelectedMonthYear.AddMonths(1).Month}&year={Model.SelectedMonthYear.AddMonths(1).Year}")"><i class="fas fa-arrow-right"></i></a>
-        </div>
-    </div>
-    <div class="col-6 text-right">
-        <a class="btn btn-success" asp-action="Create" asp-controller="CalendarApp"><i class="fas fa-plus"></i>&nbsp; Create new event</a>
-    </div>
-</div>
+@section scripts{
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
 
-<div>
-@if (Model.Events.Count > 0)
-{
-	<table class="table table-stripe table-border">
-        <tr>
-            <th>Id</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Summary</th>
-            <th>Description</th>
-            <th>Actions</th>
-        </tr>
-        @foreach (var item in Model.Events)
-        {
-        <tr>
-            <td>@item.Id</td>
-            <td>@item.Start.DateTime</td>
-            <td>@item.End.DateTime</td>
-            <td>@item.Summary</td>
-            <td>@item.Description</td>
-            <td class="btn-group">
-                <a class="btn btn-info"><i class="fas fa-clipboard"></i></a>
-                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary"><i class="fas fa-edit"></i></a>
-                <button class="btn btn-danger" onclick="Delete('@Url.Action("Delete", new {id = item.Id})')" ><i class="fas fa-trash-alt"></i></button>
-            </td>
-        </tr>
+<script>
+    $(document).ready(function () {
+        function DeleteNotReload(url) {
+            swal({
+                title: "Are you sure you want to Delete?",
+                text: "You will not be able to restore the data!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: url,
+                        success: function (data) {
+                            if (data.success) {
+                                toastr.success(data.message);
+                            }
+                            else {
+                                toastr.error(data.message);
+                            }
+                        }
+                    });
+                }
+            });
         }
-    </table>
+
+        $('#save-event').on('click', function () {
+            var title = $('#event-title').val();
+            var start = $('#starts-at').val();
+            var end = $('#ends-at').val();
+            $.ajax({
+                url: '@Url.Action("CreateEvent","EventsApi")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: '', title: title, start: start, end: end }),
+                success:function(data)
+                {
+                    calendar.fullCalendar('refetchEvents');
+                    toastr.success("Added Successfully");
+                }
+            })
+        });
+        var calendar = $('#calendar').fullCalendar({
+            editable: true,
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            selectable: true,
+            selectHelper: true,
+            events: function (start, end, timezone, callback) {
+                var start = $.fullCalendar.formatDate(start, "DD-MM-Y HH:mm:ss");
+                var end = $.fullCalendar.formatDate(end, "DD-MM-Y HH:mm:ss");
+                $.ajax({
+                    url: '@Url.Action("getlistevent","eventsapi")',
+                    data: { start: start, end: end},
+                    type: 'GET',
+                    success: function (response) {
+                        callback(response);
+                    }
+                });
+            },
+            select: function (start, end, allDay) {
+                var startVal = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
+                var endVal = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
+                $('#starts-at').val(startVal);
+                $('#ends-at').val(endVal);
+                $('.modal').modal('show');
+            },
+            editable: true,
+            eventResize: function (event) {
+                alert('event resize');
+                @*var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+                var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
+                var title = event.title;
+                var id = event.id;
+                $.ajax({
+                    url: '@Url.Action("UpdateEvent","EventsApi")/' + id,
+                    type: "PUT",
+                    data: { JSONviewModel: JSON.stringify({ FullCalendarEventVM: { title: title, start: start, end: end, id: id } }) },
+                    success: function () {
+                        calendar.fullCalendar('refetchEvents');
+                        alert('Event Updated');
+                    }
+                })*@
+            },
+            eventDrop: function (event, delta, revertFunc) {
+                var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
+                var title = event.title;
+                var id = event.id;
+                console.log(delta.minutes());
+                $.ajax({
+                    url: '@Url.Action("UpdateEvent", "EventsApi")',
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: id, title: title, start: start}),
+                    success: function () {
+                        calendar.fullCalendar('refetchEvents');
+                        toastr.success("Event Updated");
+                    },
+                    error: function () {
+                        toastr.error("Event Updating Failed");
+                        revertFunc();
+                    }
+                });
+            },
+            eventClick: function (event) {
+                var id = event.id;
+                DeleteNotReload('@Url.Action("Delete", "CalendarApp")/' + id);
+            },
+        });
+    });
+</script>
 }
-else
-{
-    <p>Don't have any event yet.</p>
-}
+
+<br>
+<br>
+<div class="container">
+    <div id="calendar" class="fc fc-unthemed fc-ltr"></div>
+
+    <div class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-left">Create new event</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group row">
+                        <div class="col-md-2">
+                            <label class="col-xs-4" for="title">Event title</label>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" name="title" id="event-title">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-2">
+                            <label class="col-xs-4" for="starts-at">Starts at</label>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="datetime-local" name="starts_at" id="starts-at">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-2">
+                            <label class="col-xs-4" for="ends-at">Ends at</label>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="datetime-local" name="ends_at" id="ends-at">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-event">Save changes</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
 </div>
