@@ -1,8 +1,182 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewBag.Title = "Calendar App";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css">
+
+
+<br>
+<br>
+<div class="container">
+    <div id="calendar" class="fc fc-unthemed fc-ltr"></div>
+
+    <div class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-left" id="modal-title">Create new event</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+                <div class="modal-body">
+                    <div id="event-form-quick-create">
+                        <div class="form-group row">
+                            <div class="col-md-2">
+                                <label class="col-xs-4" for="title">Event title</label>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="title" id="event-title">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-2">
+                                <label class="col-xs-4" for="starts-at">Starts at</label>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="datetime-local" name="starts_at" id="starts-at">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-2">
+                                <label class="col-xs-4" for="ends-at">Ends at</label>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="datetime-local" name="ends_at" id="ends-at">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="event-create-btn" data-dismiss="modal">Create new</button>
+                        </div>
+                    </div>
+
+                    <div id="event-form-edit">
+
+                    </div>
+                </div>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
 </div>
+
+
+
+
+
+
+@section scripts{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#event-create-btn').on('click', function () { myCreateEvent() });
+
+            function submitForm() {
+                var $form = $('form');
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("Edit", "CalendarApp")/' + $('#Id').val(),
+                    data: $form.serialize(),
+                    error: function () {
+                        toastr.error("Editing event failed!");
+                    },
+                    success: function () {
+                        calendar.fullCalendar('refetchEvents');
+                        toastr.success("Edited successfully!");
+                    }
+                });
+            }
+
+            function myCreateEvent() {
+                var title = $('#event-title').val();
+                var start = $('#starts-at').val();
+                var end = $('#ends-at').val();
+                $.ajax({
+                    url: '@Url.Action("CreateEvent","EventsApi")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: '', title: title, start: start, end: end }),
+                    success:function(data)
+                    {
+                        calendar.fullCalendar('refetchEvents');
+                        toastr.success("Added Successfully");
+                    }
+                })
+            };
+
+            var calendar = $('#calendar').fullCalendar({
+                editable: true,
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                selectable: true,
+                selectHelper: true,
+                events: function (start, end, timezone, callback) {
+                    var start = $.fullCalendar.formatDate(start, "DD-MM-Y HH:mm:ss");
+                    var end = $.fullCalendar.formatDate(end, "DD-MM-Y HH:mm:ss");
+                    $.ajax({
+                        url: '@Url.Action("getlistevent","eventsapi")',
+                        data: { start: start, end: end},
+                        type: 'GET',
+                        success: function (response) {
+                            callback(response);
+                        }
+                    });
+                },
+                select: function (start, end, allDay) {
+                    var startVal = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
+                    var endVal = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
+                    $('#starts-at').val(startVal);
+                    $('#ends-at').val(endVal);
+                    $('#event-form-edit').hide();
+                    $('#modal-title').html('Create new event');
+                    $('#event-form-quick-create').show();
+                    $('.modal').modal('show');
+                },
+                editable: true,
+                eventDrop: function (event, delta, revertFunc) {
+                    var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
+                    var id = event.id;
+                    $.ajax({
+                        url: '@Url.Action("UpdateEvent", "EventsApi")',
+                        type: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ id: id, start: start, minutes: delta.asMinutes()}),
+                        success: function () {
+                            calendar.fullCalendar('refetchEvents');
+                            toastr.success("Event Updated");
+                        },
+                        error: function () {
+                            toastr.error("Event Updating Failed");
+                            revertFunc();
+                        }
+                    });
+                },
+                eventClick: function (event) {
+                    $.ajax({
+                        url: '@Url.Action("GetEditForm", "CalendarApp")/'+ event.id,
+                        type: 'GET',
+                        success: function (data) {
+                            $('#event-form-quick-create').hide();
+                            $('#modal-title').html('Edit event');
+                            var edit_form = $('#event-form-edit');
+                            edit_form.html(data);
+                            edit_form.show();
+                            $('.modal').modal('show');
+                            $('#event-edit-submit').on('click', function () { submitForm() });
+                        },
+                        error: function () {
+                            toastr.error("Something get errors.");
+                        }
+                    });
+                },
+            });
+
+        });
+    </script>
+}
