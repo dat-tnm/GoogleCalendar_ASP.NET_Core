@@ -15,12 +15,17 @@ namespace GoogleCalendar_MVC.Utilities
         // This constant determines the number of iterations for the password bytes generation function.
         private int DerivationIterations = 1000;
 
+        // This constant is used to determine the keysize of the encryption algorithm in bits.
+        // We divide this by 8 within the code below to get the equivalent number of bytes.
+        private const int saltBytes = 32; //  bytes
+        private const int ivBytes = 16; // bytes
+
         public string Encrypt(string plainText, string passPhrase)
         {
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
-            var saltStringBytes = Generate256BitsOfRandomEntropy();
-            var ivStringBytes = Generate256BitsOfRandomEntropy();
+            var saltStringBytes = GenerateBitsOfRandomEntropy(saltBytes);
+            var ivStringBytes = GenerateBitsOfRandomEntropy(ivBytes);
             var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
             using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
             {
@@ -58,11 +63,11 @@ namespace GoogleCalendar_MVC.Utilities
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]
             var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
             // Get the saltbytes by extracting the first 32 bytes from the supplied cipherText bytes.
-            var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(Keysize / 8).ToArray();
+            var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(saltBytes).ToArray();
             // Get the IV bytes by extracting the next 32 bytes from the supplied cipherText bytes.
-            var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
+            var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(saltBytes).Take(ivBytes).ToArray();
             // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
-            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
+            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip(saltBytes + ivBytes).Take(cipherTextBytesWithSaltAndIv.Length - (saltBytes + ivBytes)).ToArray();
 
             using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
             {
@@ -90,9 +95,9 @@ namespace GoogleCalendar_MVC.Utilities
             }
         }
 
-        private byte[] Generate256BitsOfRandomEntropy()
+        private byte[] GenerateBitsOfRandomEntropy(int num)
         {
-            var randomBytes = new byte[16]; // 32 Bytes will give us 256 bits.
+            var randomBytes = new byte[num]; // 32 Bytes will give us 256 bits. - 16 byte = 128 bits
             using (var rngCsp = new RNGCryptoServiceProvider())
             {
                 // Fill the array with cryptographically secure random bytes.
