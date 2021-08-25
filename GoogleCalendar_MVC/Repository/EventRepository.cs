@@ -21,7 +21,7 @@ namespace GoogleCalendar_MVC.Repository
     public class EventRepository : IEventRepository
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ApplicationDbContext _db;
+        //private readonly ApplicationDbContext _db;
 
 
         private string GetCurrentUserId()
@@ -40,9 +40,9 @@ namespace GoogleCalendar_MVC.Repository
                                 ClientSecret = StaticDetails.GoogleCalendar_clientSecret,
                             },
                             StaticDetails.GoogleCalendar_Scopes,
-                            GetCurrentUserId(),
+                            StaticDetails.cookieGoogleCredentials,
                             CancellationToken.None,
-                            new MyDataStore(_db)).Result;
+                            new CookieDataStore(_httpContextAccessor)).Result;
 
             // Create Google Calendar API service.
             return new CalendarService(new BaseClientService.Initializer()
@@ -52,10 +52,10 @@ namespace GoogleCalendar_MVC.Repository
             });
         }
 
-        public EventRepository(IHttpContextAccessor httpContextAccessor, ApplicationDbContext db)
+        public EventRepository(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
-            _db = db;
+            //_db = db;
         }
 
         public async Task<bool> DeleteAsync(string id)
