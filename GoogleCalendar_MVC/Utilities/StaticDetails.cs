@@ -14,7 +14,9 @@ namespace GoogleCalendar_MVC.Utilities
         public const string GoogleCalendar_clientId = "177266376242-t8148d3dpahe3uqr4ub7osg4tj1hd06f.apps.googleusercontent.com";
         public const string GoogleCalendar_clientSecret = "pDB-3uCVvR9aTSolEyC1Viax";
         public static string[] GoogleCalendar_Scopes = { "openid", Scope.Calendar, Scope.CalendarEvents };
-        public static string GoogleCalendar_AppName = "Datnm - Google calendar";
+        public const string GoogleCalendar_AppName = "Datnm - Google calendar";
 
+
+        public const string cookieGoogleCredentials = "ggcr-";
     }
 }
