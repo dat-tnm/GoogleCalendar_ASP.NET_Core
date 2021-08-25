@@ -81,6 +81,11 @@ namespace GoogleCalendar_MVC.Controllers
             return View();
         }
 
+        public IActionResult Index_New()
+        {
+            return View();
+        }
+
         public IActionResult Create()
         {
             var viewModel = new EventVM() 
