@@ -24,7 +24,6 @@ using static Google.Apis.Calendar.v3.CalendarService;
 
 namespace GoogleCalendar_MVC.Controllers
 {
-    [Authorize]
     public class CalendarAppController : Controller
     {
         private readonly IEventRepository _eventRepo;
