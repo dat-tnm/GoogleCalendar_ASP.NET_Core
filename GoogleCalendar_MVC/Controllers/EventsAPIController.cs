@@ -17,7 +17,6 @@ using GoogleCalendar_MVC.Models.DataTransferObjects;
 
 namespace GoogleCalendar_MVC.Controllers
 {
-    [Authorize]
     public class EventsAPIController : Controller
     {
         private readonly IEventRepository _eventRepo;
