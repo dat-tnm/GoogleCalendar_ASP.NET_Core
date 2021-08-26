@@ -34,57 +34,6 @@ namespace GoogleCalendar_MVC.Controllers
         }
 
 
-
-        //public async Task<IActionResult> Index([FromQuery]string month, [FromQuery]string year)
-        //{
-        //    int month_val, year_val;
-        //    try
-        //    {
-        //        int input_m_val = int.Parse(month);
-        //        int input_y_val = int.Parse(year);
-        //        if (input_m_val < 1 || input_m_val > 12 || input_y_val < 1)
-        //        {
-        //            throw new Exception();
-        //        }
-        //        month_val = input_m_val;
-        //        year_val = input_y_val;
-        //    }
-        //    catch (Exception)
-        //    {
-        //        month_val = DateTime.Now.Month;
-        //        year_val = DateTime.Now.Year;
-        //    }
-
-        //    DateTime timeMin = Convert.ToDateTime($"01/01/0001 00:00:00 AM").AddMonths(month_val - 1).AddYears(year_val - 1);
-        //    var events = await _eventRepo.GetListAsync(request =>
-        //    {
-        //        request.TimeMin = timeMin;
-        //        request.TimeMax = ((DateTime)request.TimeMin).AddMonths(1);
-        //        request.ShowDeleted = false;
-        //        request.SingleEvents = true;
-        //        request.MaxResults = 10;
-        //        request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
-        //    });
-
-        //    var viewModel = new CalendarIndexVM()
-        //    {
-        //        Events = events.Items,
-        //        SelectedMonthYear = timeMin
-        //    };
-
-        //    return View(viewModel);
-        //}
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Index_New()
-        {
-            return View();
-        }
-
         public IActionResult Create()
         {
             var viewModel = new EventVM() 
