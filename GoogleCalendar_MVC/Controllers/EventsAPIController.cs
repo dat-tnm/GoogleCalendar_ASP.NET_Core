@@ -110,8 +110,8 @@ namespace GoogleCalendar_MVC.Controllers
             {
                 return NotFound();
             }
-            result.Start.DateTime = viewModel.Start;
-            result.End.DateTime = ((DateTime)result.End.DateTime).AddMinutes(viewModel.Minutes);
+            result.Start.DateTime = ((DateTime)result.End.DateTime).AddDays(viewModel.Days);
+            result.End.DateTime = ((DateTime)result.End.DateTime).AddDays(viewModel.Days);
 
             bool success = await _eventRepo.UpdateAsync(viewModel.Id, result);
             if (!success)
