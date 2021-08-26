@@ -53,6 +53,7 @@ namespace GoogleCalendar_MVC.Utilities
 
         private void MappingEvent_To_EventVM(Event model, EventVM viewModel)
         {
+            viewModel.Id = model.Id;
             viewModel.Summary = model.Summary;
             viewModel.Start = model.Start.DateTime == null ? DateTime.Now : (DateTime)model.Start.DateTime;
             viewModel.End = model.End.DateTime == null ? DateTime.Now : (DateTime)model.End.DateTime;
