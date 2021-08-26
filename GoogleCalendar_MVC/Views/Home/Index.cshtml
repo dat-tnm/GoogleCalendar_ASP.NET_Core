@@ -1,8 +1,10 @@
 ﻿@{
     ViewBag.Title = "Calendar App";
 }
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.min.css" integrity="sha512-IBfPhioJ2AoH2nST7c0jwU0A3RJ7hwIb3t+nYR4EJ5n9P6Nb/wclzcQNbTd4QFX1lgRAtTT+axLyK7VUCDtjWA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.min.css" integrity="sha512-CN6oL2X5VC0thwTbojxZ02e8CVs7rii0yhTLsgsdId8JDlcLENaqISvkSLFUuZk6NcPeB+FbaTfZorhbSqcRYg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/timegrid/main.min.css" integrity="sha512-/Jnt6fX98n8zZyuCt4K81+1eQJhWQn/vyMph1UvHywyziYDbu9DFGcJoW8U73m/rkaQBIEAJeoEj+2Rrx4tFyw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/list/main.min.css' />
 
 
 <br>
@@ -67,11 +69,42 @@
 
 @section scripts{
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
+    @*<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/moment/main.min.js" integrity="sha512-vRPhNmrqBLazLcQnrmaezKvTfLXlg91HMt830GlhNln3UcIk9Q/ruFkZLwOEIqwQNHBk3CftwtMJOgT9UOURjw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>*@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/core/main.min.js" integrity="sha512-bg9ZLPorHGcaLHI2lZEusTDKo0vHdaPOjVOONi4XLJ2N/c1Jn2RVI9qli4sNAziZImX42ecwywzIZiZEzZhokQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/daygrid/main.min.js" integrity="sha512-kebSy5Iu+ouq4/swjgEKwa217P2jf/hNYtFEHw7dT+8iLhOKB5PG5xaAMaVyxRK7OT/ddoGCFrg8tslo8SIMmg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/timegrid/main.min.js" integrity="sha512-APuj9Rm7J37dj8cRB1qwznH+zrWD7/vkaodDwJVxpdk72m5c9u8mbbdLHn6JnSw5M4AhV8Zb1HnLrNMGoOfR/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/list/main.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/4.2.0/interaction/main.min.js" integrity="sha512-9M3YQ9E3hEtjRZSQdU1QADaOGxI+JAzq6bieArw7nIxQbPmn10M7TYxhvJZCuvSjlncJG24l+/e5d1bTRN3m4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
-        $(document).ready(function () {
             $('#event-create-btn').on('click', function () { myCreateEvent() });
+
+            function DeleteWithoutReload(url) {
+                swal({
+                    title: "Are you sure you want to Delete?",
+                    text: "You will not be able to restore the data!",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            type: 'DELETE',
+                            url: url,
+                            success: function (data) {
+                                if (data.success) {
+                                    toastr.success(data.message);
+                                    $('.modal').modal('hide');
+                                    calendar.refetchEvents();
+                                }
+                                else {
+                                    toastr.error(data.message);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
 
             function submitForm() {
                 var $form = $('form');
@@ -84,7 +117,7 @@
                         toastr.error("Editing event failed!");
                     },
                     success: function () {
-                        calendar.fullCalendar('refetchEvents');
+                        calendar.refetchEvents();
                         toastr.success("Edited successfully!");
                     }
                 });
@@ -101,65 +134,61 @@
                     data: JSON.stringify({ id: '', title: title, start: start, end: end }),
                     success:function(data)
                     {
-                        calendar.fullCalendar('refetchEvents');
+                        calendar.refetchEvents();
                         toastr.success("Added Successfully");
                     }
                 })
             };
 
-            var calendar = $('#calendar').fullCalendar({
-                editable: true,
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                plugins: ['dayGrid', 'timeGrid', 'interaction'],
+                height: 'parent',
                 header: {
-                    left: 'prev,next today',
+                    left: 'prev,next,today',
                     center: 'title',
-                    right: 'month,agendaWeek,agendaDay'
+                    right: 'dayGridMonth, timeGridWeek'
                 },
+                defaultView: 'dayGridMonth',
                 selectable: true,
                 selectHelper: true,
-                events: function (start, end, timezone, callback) {
-                    var start = $.fullCalendar.formatDate(start, "DD-MM-Y HH:mm:ss");
-                    var end = $.fullCalendar.formatDate(end, "DD-MM-Y HH:mm:ss");
+                navLinks: true, // can click day/week names to navigate views
+                editable: true,
+                eventLimit: true, // allow "more" link when too many events
+                events: function (info, successCallback, failureCallback) {
                     $.ajax({
                         url: '@Url.Action("getlistevent","eventsapi")',
-                        data: { start: start, end: end},
+                        data: { start: info.startStr, end: info.endStr },
                         type: 'GET',
                         success: function (response) {
-                            callback(response);
+                            successCallback(response);
+                        },
+                        error: function (error, response) {
+                            failureCallback(error, response);
                         }
                     });
                 },
-                select: function (start, end, allDay) {
-                    var startVal = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
-                    var endVal = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
-                    $('#starts-at').val(startVal);
-                    $('#ends-at').val(endVal);
-                    $('#event-form-edit').hide();
-                    $('#modal-title').html('Create new event');
-                    $('#event-form-quick-create').show();
-                    $('.modal').modal('show');
-                },
-                editable: true,
-                eventDrop: function (event, delta, revertFunc) {
-                    var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss").replace(' ', 'T');
-                    var id = event.id;
+                eventDrop: function (eventDropInfo) {
+                    var id = eventDropInfo.event.id;
+                    var days = eventDropInfo.delta.days;
                     $.ajax({
                         url: '@Url.Action("UpdateEvent", "EventsApi")',
                         type: 'PUT',
                         contentType: 'application/json',
-                        data: JSON.stringify({ id: id, start: start, minutes: delta.asMinutes()}),
+                        data: JSON.stringify({ id: id, days: days}),
                         success: function () {
-                            calendar.fullCalendar('refetchEvents');
+                            calendar.refetchEvents();
                             toastr.success("Event Updated");
                         },
                         error: function () {
                             toastr.error("Event Updating Failed");
-                            revertFunc();
+                            eventDropInfo.revert();
                         }
                     });
                 },
-                eventClick: function (event) {
+                eventClick: function (eventClickInfo) {
                     $.ajax({
-                        url: '@Url.Action("GetEditForm", "CalendarApp")/'+ event.id,
+                        url: '@Url.Action("GetEditForm", "CalendarApp")/' + eventClickInfo.event.id,
                         type: 'GET',
                         success: function (data) {
                             $('#event-form-quick-create').hide();
@@ -167,16 +196,31 @@
                             var edit_form = $('#event-form-edit');
                             edit_form.html(data);
                             edit_form.show();
-                            $('.modal').modal('show');
                             $('#event-edit-submit').on('click', function () { submitForm() });
+                            $('.modal').modal('show');
                         },
                         error: function () {
                             toastr.error("Something get errors.");
                         }
                     });
                 },
+                select: function (selectionInfo) {
+                    var start = selectionInfo.startStr.split('+')[0];
+                    var end = selectionInfo.endStr.split('+')[0];
+                    if ($('.fc-dayGridMonth-button').hasClass('fc-button-active')) {
+                        start += 'T00:00:00';
+                        end += 'T00:00:00';
+                    }
+                    $('#starts-at').val(start);
+                    $('#ends-at').val(end);
+                    $('#event-title').val('');
+                    $('#event-form-edit').hide();
+                    $('#modal-title').html('Create new event');
+                    $('#event-form-quick-create').show();
+                    $('.modal').modal('show');
+                }
             });
 
-        });
+            calendar.render();
     </script>
 }
